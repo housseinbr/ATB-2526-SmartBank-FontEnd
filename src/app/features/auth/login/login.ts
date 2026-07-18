@@ -1,7 +1,10 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Toast, ToastType } from '../../../shared/components/toast/toast';
+import { AuthService } from '../../../core/services/auth.service';
+import { Role } from '../../../core/models/role';
 
 @Component({
   selector: 'app-login',
@@ -11,8 +14,11 @@ import { Toast, ToastType } from '../../../shared/components/toast/toast';
 })
 export class Login {
   private fb = new FormBuilder();
+  private authService = inject(AuthService);
+  private router = inject(Router);
 
   loading = signal(false);
+  serverError = signal<string | null>(null);
 
   toastVisible = signal(false);
   toastMessage = signal('');
@@ -38,17 +44,42 @@ export class Login {
     }
 
     this.loading.set(true);
+    this.serverError.set(null);
 
-    // TODO: remplacer par un vrai appel à AuthService.login(...)
-    // AuthService.login(this.email.value!, this.password.value!).subscribe({
-    //   next: () => this.showToast('Connexion réussie.', 'success'),
-    //   error: () => this.showToast('Email ou mot de passe incorrect.', 'error'),
-    // });
+    this.authService
+      .login({
+        email: this.email.value!,
+        password: this.password.value!,
+      })
+      .subscribe({
+        next: (response) => {
+          this.loading.set(false);
+          this.showToast('Connexion réussie.', 'success');
+          this.redirectByRole(response.role);
+        },
+        error: (err) => {
+          this.loading.set(false);
+          const message =
+            err.status === 401
+              ? 'Email ou mot de passe incorrect.'
+              : "Une erreur est survenue, réessayez plus tard.";
+          this.serverError.set(message);
+          this.showToast(message, 'error');
+        },
+      });
+  }
 
-    setTimeout(() => {
-      this.loading.set(false);
-      this.showToast('Connexion réussie.', 'success');
-    }, 600);
+  private redirectByRole(role: Role): void {
+    switch (role) {
+      case Role.ADMIN:
+        this.router.navigate(['/dashboard/admin']);
+        break;
+      case Role.SUPERVISEUR: // adapte au nom exact de ton enum
+        this.router.navigate(['/dashboard/superviseur']);
+        break;
+      default:
+        this.router.navigate(['/dashboard/employe']);
+    }
   }
 
   private showToast(message: string, type: ToastType): void {
