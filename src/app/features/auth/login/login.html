@@ -1,0 +1,102 @@
+<app-toast
+  [message]="toastMessage()"
+  [type]="toastType()"
+  [visible]="toastVisible()"
+></app-toast>
+
+<div class="login-page">
+  <!-- Left panel -->
+  <div class="login-hero">
+    <div class="login-hero__grid"></div>
+    <div class="login-hero__glow login-hero__glow--top"></div>
+    <div class="login-hero__glow login-hero__glow--bottom"></div>
+
+    <div class="login-hero__brand">
+      <div class="login-hero__logo">ATB</div>
+      <div>
+        <div class="login-hero__brand-name">ATB</div>
+        <div class="login-hero__brand-sub">Arab Tunisian Bank</div>
+      </div>
+    </div>
+
+    <div class="login-hero__content">
+      <h1 class="login-hero__title">
+        Gestion des <span class="login-hero__accent">Congés</span> & Absences
+      </h1>
+      <p class="login-hero__text">
+        Plateforme interne de gestion RH pour les collaborateurs de l'Arab
+        Tunisian Bank. Gérez vos demandes, consultez vos soldes et suivez vos
+        absences en toute simplicité.
+      </p>
+    </div>
+
+    <div class="login-hero__dots">
+      <span class="login-hero__dot login-hero__dot--active"></span>
+      <span class="login-hero__dot"></span>
+      <span class="login-hero__dot"></span>
+    </div>
+  </div>
+
+  <!-- Right panel -->
+  <div class="login-panel">
+    <form class="login-card" [formGroup]="form" (ngSubmit)="onSubmit()">
+      <h2 class="login-card__title">Connexion</h2>
+      <p class="login-card__subtitle">Accédez à votre espace personnel</p>
+
+      @if (serverError()) {
+        <p class="login-card__error">{{ serverError() }}</p>
+      }
+
+      <div class="login-field">
+        <label for="email">Adresse e-mail</label>
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          placeholder="nom&#64;atb.tn"
+          [class.login-field__input--invalid]="email.invalid && email.touched"
+        />
+        @if (email.invalid && email.touched) {
+          <p class="login-field__error">
+            @if (email.errors?.['required']) {
+              L'adresse e-mail est requise.
+            } @else if (email.errors?.['email']) {
+              Le format de l'e-mail n'est pas valide.
+            }
+          </p>
+        }
+      </div>
+
+      <div class="login-field">
+        <label for="password">Mot de passe</label>
+        <input
+          id="password"
+          type="password"
+          formControlName="password"
+          placeholder="••••••••"
+          [class.login-field__input--invalid]="password.invalid && password.touched"
+        />
+        @if (password.invalid && password.touched) {
+          <p class="login-field__error">
+            @if (password.errors?.['required']) {
+              Le mot de passe est requis.
+            } @else if (password.errors?.['minlength']) {
+              Le mot de passe doit contenir au moins 6 caractères.
+            }
+          </p>
+        }
+      </div>
+
+      <button type="submit" class="login-submit" [disabled]="loading()">
+        {{ loading() ? 'Connexion...' : 'Se connecter' }}
+        <span aria-hidden="true">→</span>
+      </button>
+
+      <div class="login-card__forgot">
+        <a href="#">Mot de passe oublié ?</a>
+      </div>
+    </form>
+
+    <p class="login-footer">Arab Tunisian Bank © 2025 — Tous droits réservés</p>
+  </div>
+</div>
