@@ -1,0 +1,15 @@
+<div class="dashboard-layout">
+  <app-sidebar 
+    class="dashboard-layout__sidebar"
+    [role]="role()"
+    [badges]="badges"
+    (collapsedChange)="onCollapsedChange($event)"
+  />
+
+  <div class="dashboard-layout__main" [class.dashboard-layout__main--collapsed]="isSidebarCollapsed()">
+    <app-topbar [pageTitle]="pageTitle()" />
+    <div class="dashboard-layout__content">
+      <router-outlet />
+    </div>
+  </div>
+</div>

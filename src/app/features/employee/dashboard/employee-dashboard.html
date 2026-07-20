@@ -1,0 +1,156 @@
+<div class="employee-dashboard">
+  <h1 class="page-title">Tableau de bord</h1>
+
+  <!-- KPI Cards -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-card__icon kpi-card__icon--solde">
+        <app-icon name="calendar" [size]="22" />
+      </div>
+      <div class="kpi-card__content">
+        <span class="kpi-card__value">{{ stats.soldeAnnuel }} <small>j</small></span>
+        <span class="kpi-card__label">Solde annuel</span>
+        <span class="kpi-card__sublabel">sur {{ stats.totalJours }} jours</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-card__icon kpi-card__icon--approved">
+        <app-icon name="star" [size]="22" />
+      </div>
+      <div class="kpi-card__content">
+        <span class="kpi-card__value">{{ stats.approuvees }}</span>
+        <span class="kpi-card__label">Approuvées</span>
+        <span class="kpi-card__sublabel">cette année</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-card__icon kpi-card__icon--pending">
+        <app-icon name="inbox" [size]="22" />
+      </div>
+      <div class="kpi-card__content">
+        <span class="kpi-card__value">{{ stats.enAttente }}</span>
+        <span class="kpi-card__label">En attente</span>
+        <span class="kpi-card__sublabel">demande en cours</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-card__icon kpi-card__icon--notif">
+        <app-icon name="bell" [size]="22" />
+      </div>
+      <div class="kpi-card__content">
+        <span class="kpi-card__value">{{ stats.notifications }}</span>
+        <span class="kpi-card__label">Notifications</span>
+        <span class="kpi-card__sublabel">non lues</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="dashboard-grid">
+    <!-- Soldes -->
+    <div class="data-card">
+      <div class="data-card__header">
+        <div>
+          <h2 class="data-card__title">Mes soldes</h2>
+          <span class="data-card__subtitle">Situation au 15 Jan 2025</span>
+        </div>
+        <a class="data-card__link">Voir détail →</a>
+      </div>
+      <div class="soldes-list">
+        <div class="solde-item">
+          <div class="solde-item__info">
+            <span class="solde-item__label">Congés annuels</span>
+            <span class="solde-item__value">{{ soldes.conges.used }}/{{ soldes.conges.total }}j</span>
+          </div>
+          <div class="solde-bar">
+            <div class="solde-bar__track">
+              <div class="solde-bar__fill" [style.width.%]="(soldes.conges.used / soldes.conges.total) * 100"></div>
+            </div>
+          </div>
+        </div>
+        <div class="solde-item">
+          <div class="solde-item__info">
+            <span class="solde-item__label">Congés maladie</span>
+            <span class="solde-item__value">{{ soldes.maladie.used }}/{{ soldes.maladie.total }}j</span>
+          </div>
+          <div class="solde-bar">
+            <div class="solde-bar__track">
+              <div class="solde-bar__fill solde-bar__fill--dark" [style.width.%]="(soldes.maladie.used / soldes.maladie.total) * 100"></div>
+            </div>
+          </div>
+        </div>
+        <div class="solde-item">
+          <div class="solde-item__info">
+            <span class="solde-item__label">Congés exceptionnels</span>
+            <span class="solde-item__value">{{ soldes.exceptionnel.used }}/{{ soldes.exceptionnel.total }}j</span>
+          </div>
+          <div class="solde-bar">
+            <div class="solde-bar__track">
+              <div class="solde-bar__fill solde-bar__fill--gray" [style.width.%]="(soldes.exceptionnel.used / soldes.exceptionnel.total) * 100"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Absences History -->
+    <div class="data-card">
+      <div class="data-card__header">
+        <h2 class="data-card__title">Historique des absences</h2>
+        <span class="data-card__subtitle">6 derniers mois</span>
+      </div>
+      <div class="chart-bars">
+        @for (item of absencesHistory; track item.month) {
+          <div class="bar-item">
+            <div class="bar-item__track">
+              <div class="bar-item__fill" [style.height.%]="(item.value / 12) * 100"></div>
+            </div>
+            <span class="bar-item__label">{{ item.month }}</span>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Requests -->
+  <div class="data-card">
+    <div class="data-card__header">
+      <h2 class="data-card__title">Demandes récentes</h2>
+      <button class="btn btn--primary">
+        <app-icon name="user-plus" [size]="14" />
+        <span>Nouvelle demande</span>
+      </button>
+    </div>
+    <div class="request-list">
+      @for (req of recentRequests; track req.ref) {
+        <div class="request-item">
+          <div class="request-item__indicator" [class]="'request-item__indicator--' + req.statusColor"></div>
+          <div class="request-item__content">
+            <span class="request-item__type">{{ req.type }}</span>
+            <span class="request-item__dates">{{ req.dates }} · {{ req.days }} jours</span>
+          </div>
+          <span class="request-item__status" [class]="'request-item__status--' + req.statusColor">{{ req.status }}</span>
+          <span class="request-item__ref">{{ req.ref }}</span>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Notifications -->
+  <div class="data-card">
+    <div class="data-card__header">
+      <h2 class="data-card__title">Notifications récentes</h2>
+      <a class="data-card__link">Toutes voir</a>
+    </div>
+    <div class="notification-list">
+      @for (notif of notifications; track notif.text) {
+        <div class="notification-item" [class.notification-item--unread]="notif.unread">
+          <div class="notification-item__dot" [class.notification-item__dot--unread]="notif.unread"></div>
+          <div class="notification-item__content">
+            <p class="notification-item__text">{{ notif.text }}</p>
+            <span class="notification-item__time">{{ notif.time }}</span>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>

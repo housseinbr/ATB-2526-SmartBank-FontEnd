@@ -1,61 +1,62 @@
-import { Component, Input, inject } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { Component, input, inject, signal, output } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { Icon } from '../icon/icon';
+import { AuthService } from '../../../core/services/auth.service';
 import { Role } from '../../../core/models/role';
 import { SIDEBAR_CONFIG } from '../../config/sidebar-menu.config';
-import { AuthService } from '../../../core/services/auth.service';
-
-export type SidebarBadges = Partial<Record<'notifications' | 'demandes', number>>;
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, Icon],
+  imports: [CommonModule, RouterModule, Icon],
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.css',
 })
 export class Sidebar {
   private authService = inject(AuthService);
-  private router = inject(Router);
 
-  /** Rôle affiché : pilote le libellé d'espace et la liste de menu. */
-  @Input({ required: true }) role!: Role;
+  role = input.required<Role>();
+  badges = input<{ notifications?: number; demandes?: number }>({});
 
-  /** Compteurs dynamiques à afficher sur certains items (ex: notifications, demandes en attente). */
-  @Input() badges: SidebarBadges = {};
+  collapsedChange = output<boolean>();
 
-  collapsed = false;
+  isCollapsed = signal(false);
 
-  get config() {
-    return SIDEBAR_CONFIG[this.role];
-  }
+  config = SIDEBAR_CONFIG;
 
-  get currentUser() {
+  get user() {
     return this.authService.currentUser();
   }
 
-  get fullName(): string {
-    const user = this.currentUser;
-    return user ? `${user.firstName} ${user.lastName}` : '';
-  }
-
   get initials(): string {
-    const user = this.currentUser;
-    if (!user) return '';
-    return `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase();
+    const u = this.user;
+    if (!u?.firstName || !u?.lastName) return '??';
+    return (u.firstName[0] + u.lastName[0]).toUpperCase();
   }
 
-  badgeFor(item: { badgeKey?: 'notifications' | 'demandes' }): number | null {
-    if (!item.badgeKey) return null;
-    return this.badges[item.badgeKey] ?? null;
+  get fullName(): string {
+    const u = this.user;
+    if (!u?.firstName || !u?.lastName) return 'Utilisateur';
+    return `${u.firstName} ${u.lastName}`;
   }
 
-  toggleCollapse(): void {
-    this.collapsed = !this.collapsed;
+  get email(): string {
+    return this.user?.email || '';
   }
 
-  logout(): void {
+  badgeFor(item: { badgeKey?: string }): number | undefined {
+    const key = item.badgeKey;
+    if (!key) return undefined;
+    return this.badges()[key as 'notifications' | 'demandes'];
+  }
+
+  toggleSidebar() {
+    this.isCollapsed.update(v => !v);
+    this.collapsedChange.emit(this.isCollapsed());
+  }
+
+  logout() {
     this.authService.logout();
-    this.router.navigate(['/login']);
   }
 }

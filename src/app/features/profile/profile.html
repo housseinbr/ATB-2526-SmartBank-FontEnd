@@ -1,0 +1,235 @@
+<div class="profile-page">
+  @if (loading()) {
+    <div class="profile-loading">
+      <div class="spinner"></div>
+      <p>Chargement du profil...</p>
+    </div>
+  }
+
+  @if (error()) {
+    <div class="profile-error">
+      <app-icon name="x" [size]="32" />
+      <p>{{ error() }}</p>
+      <button class="btn btn-primary" (click)="loadUser()">Réessayer</button>
+    </div>
+  }
+
+  @if (user() && !loading()) {
+    <!-- Header -->
+    <div class="profile-header">
+      <div class="profile-avatar-large">{{ initials }}</div>
+      <div class="profile-header-info">
+        <h1>{{ fullName }}</h1>
+        <span class="profile-role-badge" [style.background-color]="roleColor">{{ roleLabel }}</span>
+        <p class="profile-email">{{ user()?.email }}</p>
+      </div>
+      <div class="profile-header-actions">
+        @if (!editMode()) {
+          <button class="btn btn-primary" (click)="startEdit()">
+            <app-icon name="pencil" [size]="16" /> Modifier
+          </button>
+        }
+        <button class="btn btn-outline" (click)="openPasswordModal()">
+          <app-icon name="lock" [size]="16" /> Changer mot de passe
+        </button>
+      </div>
+    </div>
+
+    @if (saveSuccess()) {
+      <div class="profile-success">
+        <app-icon name="check" [size]="16" /> Modifications enregistrées avec succès !
+      </div>
+    }
+
+    <!-- Formulaire d'édition -->
+    @if (editMode()) {
+      <div class="profile-card">
+        <div class="card-header">
+          <h2><app-icon name="pencil" [size]="20" /> Modifier mes informations</h2>
+        </div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Prénom</label>
+              <input type="text" [ngModel]="editForm().firstName" (ngModelChange)="updateField('firstName', $event)" class="form-input" />
+            </div>
+            <div class="form-group">
+              <label>Nom</label>
+              <input type="text" [ngModel]="editForm().lastName" (ngModelChange)="updateField('lastName', $event)" class="form-input" />
+            </div>
+            <div class="form-group">
+              <label>Nom d'utilisateur</label>
+              <input type="text" [ngModel]="editForm().useName" (ngModelChange)="updateField('useName', $event)" class="form-input" />
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" [ngModel]="editForm().email" (ngModelChange)="updateField('email', $event)" class="form-input" />
+            </div>
+            <div class="form-group">
+              <label>Téléphone</label>
+              <input type="text" [ngModel]="editForm().numTel" (ngModelChange)="updateField('numTel', $event)" class="form-input" />
+            </div>
+            <div class="form-group">
+              <label>Fax</label>
+              <input type="text" [ngModel]="editForm().numFax" (ngModelChange)="updateField('numFax', $event)" class="form-input" />
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-secondary" (click)="cancelEdit()">Annuler</button>
+            <button class="btn btn-primary" (click)="saveEdit()" [disabled]="saving()">
+              @if (saving()) {
+                <span class="spinner-small"></span> Enregistrement...
+              } @else {
+                <app-icon name="check" [size]="16" /> Enregistrer
+              }
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Infos personnelles -->
+    <div class="profile-grid">
+      <div class="profile-card">
+        <div class="card-header">
+          <h2><app-icon name="user" [size]="20" /> Informations personnelles</h2>
+        </div>
+        <div class="card-body">
+          <div class="info-row">
+            <span class="info-label">ID</span>
+            <span class="info-value">#{{ user()?.id }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">CIN</span>
+            <span class="info-value">{{ user()?.cin }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Nom d'utilisateur</span>
+            <span class="info-value">{{ user()?.useName }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Prénom</span>
+            <span class="info-value">{{ user()?.firstName }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Nom</span>
+            <span class="info-value">{{ user()?.lastName }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Sexe</span>
+            <span class="info-value">{{ user()?.sexe }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Date de naissance</span>
+            <span class="info-value">{{ user()?.birthday | date:'dd/MM/yyyy' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-card">
+        <div class="card-header">
+          <h2><app-icon name="mail" [size]="20" /> Contact</h2>
+        </div>
+        <div class="card-body">
+          <div class="info-row">
+            <span class="info-label">Email</span>
+            <span class="info-value">{{ user()?.email }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Téléphone</span>
+            <span class="info-value">{{ user()?.numTel }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Fax</span>
+            <span class="info-value">{{ user()?.numFax }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-card">
+        <div class="card-header">
+          <h2><app-icon name="briefcase" [size]="20" /> Informations professionnelles</h2>
+        </div>
+        <div class="card-body">
+          <div class="info-row">
+            <span class="info-label">Rôle</span>
+            <span class="info-value">
+              <span class="role-badge-small" [style.background-color]="roleColor">{{ roleLabel }}</span>
+            </span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Salaire</span>
+            <span class="info-value">{{ user()?.salaire | number:'1.2-2' }} TND</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Solde congés</span>
+            <span class="info-value">{{ user()?.solde | number:'1.0-0' }} jours</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Statut</span>
+            <span class="info-value">
+              <span class="status-badge" [class.active]="user()?.actif === 'actif'" [class.inactive]="user()?.actif === 'inactif'">
+                {{ user()?.actif === 'actif' ? 'Actif' : 'Inactif' }}
+              </span>
+            </span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Superviseur</span>
+            <span class="info-value">{{ supervisorName }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-card">
+        <div class="card-header">
+          <h2><app-icon name="activity" [size]="20" /> Statistiques</h2>
+        </div>
+        <div class="card-body">
+          <div class="stat-item">
+            <span class="stat-number">{{ user()?.solde | number:'1.0-0' }}</span>
+            <span class="stat-label">Jours de congés restants</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number">{{ user()?.salaire | number:'1.0-0' }}</span>
+            <span class="stat-label">TND / mois</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal mot de passe -->
+  @if (showPasswordModal()) {
+    <div class="modal-overlay" (click)="closePasswordModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Changer le mot de passe</h3>
+          <button class="modal-close" (click)="closePasswordModal()">
+            <app-icon name="x" [size]="20" />
+          </button>
+        </div>
+        <div class="modal-body">
+          @if (passwordError()) {
+            <div class="modal-error">{{ passwordError() }}</div>
+          }
+          <div class="form-group">
+            <label>Mot de passe actuel</label>
+            <input type="password" [(ngModel)]="passwordForm().current" class="form-input" placeholder="••••••" />
+          </div>
+          <div class="form-group">
+            <label>Nouveau mot de passe</label>
+            <input type="password" [(ngModel)]="passwordForm().new" class="form-input" placeholder="Min. 6 caractères" />
+          </div>
+          <div class="form-group">
+            <label>Confirmer le mot de passe</label>
+            <input type="password" [(ngModel)]="passwordForm().confirm" class="form-input" placeholder="••••••" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" (click)="closePasswordModal()">Annuler</button>
+          <button class="btn btn-primary" (click)="changePassword()">Changer</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

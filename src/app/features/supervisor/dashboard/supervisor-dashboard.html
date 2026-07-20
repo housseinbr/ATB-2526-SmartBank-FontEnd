@@ -1,0 +1,119 @@
+<div class="supervisor-dashboard">
+  <h1 class="page-title">Tableau de bord équipe</h1>
+
+  <!-- KPI Cards -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-card__icon kpi-card__icon--pending">
+        <app-icon name="inbox" [size]="22" />
+      </div>
+      <div class="kpi-card__content">
+        <span class="kpi-card__value">{{ stats.demandesEnAttente }}</span>
+        <span class="kpi-card__label">Demandes en attente</span>
+        <span class="kpi-card__sublabel">à traiter</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-card__icon kpi-card__icon--team">
+        <app-icon name="users" [size]="22" />
+      </div>
+      <div class="kpi-card__content">
+        <span class="kpi-card__value">{{ stats.effectif }}</span>
+        <span class="kpi-card__label">Effectif équipe</span>
+        <span class="kpi-card__sublabel">collaborateurs</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-card__icon kpi-card__icon--absence">
+        <app-icon name="calendar" [size]="22" />
+      </div>
+      <div class="kpi-card__content">
+        <span class="kpi-card__value">{{ stats.absencesAujourdhui }}</span>
+        <span class="kpi-card__label">Absences en cours</span>
+        <span class="kpi-card__sublabel">aujourd'hui</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-card__icon kpi-card__icon--presence">
+        <app-icon name="bar-chart" [size]="22" />
+      </div>
+      <div class="kpi-card__content">
+        <span class="kpi-card__value">{{ stats.tauxPresence }}%</span>
+        <span class="kpi-card__label">Taux de présence</span>
+        <span class="kpi-card__sublabel">cette semaine</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="dashboard-grid">
+    <!-- Pending Requests -->
+    <div class="data-card">
+      <div class="data-card__header">
+        <h2 class="data-card__title">Demandes en attente</h2>
+        <span class="data-card__subtitle">Nécessitent votre action</span>
+      </div>
+      <div class="request-list">
+        @for (req of pendingRequests; track req.name) {
+          <div class="request-item">
+            <div class="request-item__avatar">{{ req.initials }}</div>
+            <div class="request-item__content">
+              <span class="request-item__name">{{ req.name }}</span>
+              <span class="request-item__type">{{ req.type }} · {{ req.dates }}</span>
+            </div>
+            <div class="request-item__actions">
+              <button class="action-btn action-btn--success" title="Approuver">
+                <app-icon name="search" [size]="14" />
+              </button>
+              <button class="action-btn action-btn--danger" title="Refuser">
+                <app-icon name="user" [size]="14" />
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Status Chart -->
+    <div class="data-card">
+      <div class="data-card__header">
+        <h2 class="data-card__title">Répartition statuts</h2>
+      </div>
+      <div class="chart-placeholder">
+        <div class="donut-chart">
+          <svg viewBox="0 0 36 36" class="donut">
+            <circle class="donut-ring" cx="18" cy="18" r="15.9155" fill="none" stroke="#e5e7eb" stroke-width="3"></circle>
+            <circle class="donut-segment" cx="18" cy="18" r="15.9155" fill="none" stroke="#16a34a" stroke-width="3" stroke-dasharray="62 38" stroke-dashoffset="25"></circle>
+            <circle class="donut-segment" cx="18" cy="18" r="15.9155" fill="none" stroke="#f59e0b" stroke-width="3" stroke-dasharray="24 76" stroke-dashoffset="-37"></circle>
+            <circle class="donut-segment" cx="18" cy="18" r="15.9155" fill="none" stroke="#dc2626" stroke-width="3" stroke-dasharray="14 86" stroke-dashoffset="-61"></circle>
+          </svg>
+          <div class="donut-center">87%</div>
+        </div>
+        <div class="chart-legend">
+          <div class="legend-item"><span class="legend-dot" style="background:#16a34a"></span> Approuvé 62%</div>
+          <div class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span> En attente 24%</div>
+          <div class="legend-item"><span class="legend-dot" style="background:#dc2626"></span> Refusé 14%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Team Status -->
+  <div class="data-card team-card">
+    <div class="data-card__header">
+      <h2 class="data-card__title">Mon équipe</h2>
+      <span class="data-card__subtitle">Statut temps réel</span>
+    </div>
+    <div class="team-grid">
+      @for (member of team; track member.name) {
+        <div class="team-member">
+          <div class="team-member__avatar">{{ member.initials }}</div>
+          <div class="team-member__info">
+            <span class="team-member__name">{{ member.name }}</span>
+            <span class="team-member__role">{{ member.role }}</span>
+          </div>
+          <span class="team-member__status" [class]="'team-member__status--' + member.statusColor">{{ member.status }}</span>
+        </div>
+      }
+    </div>
+  </div>
+</div>

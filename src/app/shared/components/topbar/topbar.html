@@ -1,0 +1,31 @@
+<header class="topbar">
+  <div class="topbar__left">
+    <h1 class="topbar__title">{{ pageTitle() }}</h1>
+  </div>
+
+  <div class="topbar__right">
+    <div class="topbar__search">
+      <app-icon name="search" [size]="14" />
+      <input
+        type="text"
+        placeholder="Rechercher..."
+        [value]="searchValue"
+        (input)="onSearch($event)"
+      />
+    </div>
+
+    <div class="topbar__notifications">
+      <app-icon name="bell" [size]="18" />
+      <span class="topbar__notifications-badge">2</span>
+    </div>
+
+    <div class="topbar__profile">
+      <div class="topbar__profile-avatar">{{ initials }}</div>
+      <div class="topbar__profile-info">
+        <span class="topbar__profile-name">{{ fullName }}</span>
+        <span class="topbar__profile-email">{{ user()?.email }}</span>
+      </div>
+      <app-icon class="topbar__profile-chevron" name="chevron-down" [size]="14" />
+    </div>
+  </div>
+</header>

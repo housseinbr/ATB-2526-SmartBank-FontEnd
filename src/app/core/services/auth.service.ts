@@ -64,4 +64,17 @@ export class AuthService {
     const raw = localStorage.getItem(USER_KEY);
     return raw ? (JSON.parse(raw) as AuthResponse) : null;
   }
+
+  // ← AJOUTE CES 2 GETTERS
+  get currentRole(): Role {
+  return this.role() ?? Role.SUPERVISEUR;  // ← Role.SUPERVISEUR pas 'superviseur'
+}
+
+  get badges(): { notifications?: number; demandes?: number } {
+    // ← Récupère depuis ton backend ou retourne des valeurs par défaut
+    return {
+      notifications: 0,
+      demandes: 0
+    };
+  }
 }

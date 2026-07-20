@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 
 export type IconName =
   | 'grid'
@@ -16,14 +16,33 @@ export type IconName =
   | 'shield'
   | 'log-out'
   | 'chevron-left'
-  | 'search';
+  | 'chevron-down'
+  | 'search'
+  | 'trash'
+  | 'pencil'
+  | 'eye'
+  | 'x'
+  | 'check'
+  | 'toggle-on'
+  | 'toggle-off'
+  | 'chart-pie'
+  | 'trending-up'
+  | 'trending-down'
+  | 'activity'
+  | 'filter'
+  | 'download'
+  | 'upload'
+  | 'lock'
+  | 'mail'
+  | 'plus';
 
 @Component({
   selector: 'app-icon',
   standalone: true,
   templateUrl: './icon.html',
+  styleUrl: './icon.css',
 })
 export class Icon {
-  @Input() name: IconName = 'grid';
-  @Input() size = 18;
+  name = input.required<IconName>();
+  size = input<number>(20);
 }

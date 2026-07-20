@@ -1,52 +1,41 @@
 import { Role } from '../../core/models/role';
-import { IconName } from '../components/icon/icon';
 
-export interface SidebarMenuItem {
+export interface MenuItem {
   label: string;
-  icon: IconName;
   route: string;
-  /** Clé optionnelle pour lier un badge dynamique (ex: nombre de demandes en attente). */
+  icon: string;
   badgeKey?: 'notifications' | 'demandes';
 }
 
-export interface SidebarRoleConfig {
+export interface SidebarConfig {
   brandLabel: string;
-  items: SidebarMenuItem[];
+  items: MenuItem[];
 }
 
-export const SIDEBAR_CONFIG: Record<Role, SidebarRoleConfig> = {
-  [Role.EMPLOYE]: {
-    brandLabel: 'Espace Employé',
+export const SIDEBAR_CONFIG: Record<Role, SidebarConfig> = {
+  [Role.ADMIN]: {
+    brandLabel: 'Espace Admin',
     items: [
-      { label: 'Tableau de bord', icon: 'grid', route: '/dashboard/employe' },
-      { label: 'Mon profil', icon: 'user', route: '/employe/profil' },
-      { label: 'Faire une demande', icon: 'user-plus', route: '/employe/demandes/nouvelle' },
-      { label: 'Mes absences', icon: 'calendar', route: '/employe/absences' },
-      { label: 'Mes soldes', icon: 'bar-chart', route: '/employe/soldes' },
-      { label: 'Mes compétences', icon: 'award', route: '/employe/competences' },
-      { label: 'Formations', icon: 'book-open', route: '/employe/formations' },
-      { label: 'Postes ouverts', icon: 'briefcase', route: '/employe/postes' },
-      { label: 'Évaluations', icon: 'star', route: '/employe/evaluations' },
-      { label: 'Notifications', icon: 'bell', route: '/employe/notifications', badgeKey: 'notifications' },
+      { label: 'Tableau de bord', route: '/dashboard/admin', icon: 'grid' },
+      { label: 'Utilisateurs', route: '/dashboard/admin', icon: 'users' },
+      { label: 'Mon Profil', route: '/dashboard/profile', icon: 'user' },
     ],
   },
   [Role.SUPERVISEUR]: {
     brandLabel: 'Espace Superviseur',
     items: [
-      { label: 'Tableau de bord', icon: 'grid', route: '/dashboard/superviseur' },
-      { label: 'Mon équipe', icon: 'users', route: '/superviseur/equipe' },
-      { label: 'Demandes', icon: 'inbox', route: '/superviseur/demandes', badgeKey: 'demandes' },
-      { label: 'Absences', icon: 'calendar', route: '/superviseur/absences' },
-      { label: 'Évaluations', icon: 'star', route: '/superviseur/evaluations' },
-      { label: 'Formations', icon: 'book-open', route: '/superviseur/formations' },
-      { label: 'Mobilités', icon: 'briefcase', route: '/superviseur/mobilites' },
+      { label: 'Tableau de bord', route: '/dashboard/superviseur', icon: 'grid' },
+      { label: 'Mon équipe', route: '/dashboard/superviseur', icon: 'users' },
+      { label: 'Demandes', route: '/dashboard/superviseur', icon: 'inbox', badgeKey: 'demandes' },
+      { label: 'Mon Profil', route: '/dashboard/profile', icon: 'user' },
     ],
   },
-  [Role.ADMIN]: {
-    brandLabel: 'Espace Admin',
+  [Role.EMPLOYE]: {
+    brandLabel: 'Espace Employé',
     items: [
-      { label: 'Utilisateurs', icon: 'users', route: '/admin/utilisateurs' },
-      { label: 'Sécurité', icon: 'shield', route: '/admin/securite' },
+      { label: 'Tableau de bord', route: '/dashboard/employe', icon: 'grid' },
+      { label: 'Mes demandes', route: '/dashboard/employe', icon: 'inbox' },
+      { label: 'Mon Profil', route: '/dashboard/profile', icon: 'user' },
     ],
   },
 };
