@@ -74,5 +74,5 @@ export class UserService {
 
   changePassword(id: number, newPassword: string): Observable<void> {
   return this.http.patch<void>(`${this.baseUrl}/${id}/password`, newPassword);
-}
+} 
 }
