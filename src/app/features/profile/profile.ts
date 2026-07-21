@@ -7,11 +7,12 @@ import { UserService } from '../../core/services/user.service';
 import { UserResponse } from '../../core/models/user-response';
 import { Role } from '../../core/models/role';
 import { Icon } from '../../shared/components/icon/icon';
+import { Toast, ToastType } from '../../shared/components/toast/toast';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule, Icon],
+  imports: [CommonModule, FormsModule, Icon, Toast],
   templateUrl: './profile.html',
   styleUrl: './profile.css',
 })
@@ -23,7 +24,20 @@ export class Profile {
   loading = signal(false);
   error = signal<string | null>(null);
   saving = signal(false);
-  saveSuccess = signal(false);
+
+  // ===== TOAST =====
+  toastMessage = signal('');
+  toastType = signal<ToastType>('success');
+  toastVisible = signal(false);
+  private toastTimeout?: ReturnType<typeof setTimeout>;
+
+  private showToast(message: string, type: ToastType = 'success') {
+    clearTimeout(this.toastTimeout);
+    this.toastMessage.set(message);
+    this.toastType.set(type);
+    this.toastVisible.set(true);
+    this.toastTimeout = setTimeout(() => this.toastVisible.set(false), 3000);
+  }
 
   // Mode édition
   editMode = signal(false);
@@ -61,6 +75,16 @@ export class Profile {
       case Role.SUPERVISEUR: return '#f59e0b';
       case Role.EMPLOYE: return '#10b981';
       default: return '#6b7280';
+    }
+  }
+
+  get roleBg(): string {
+    const u = this.user();
+    switch (u?.role) {
+      case Role.ADMIN: return 'rgba(239, 68, 68, 0.1)';
+      case Role.SUPERVISEUR: return 'rgba(245, 158, 11, 0.1)';
+      case Role.EMPLOYE: return 'rgba(16, 185, 129, 0.1)';
+      default: return 'rgba(107, 114, 128, 0.1)';
     }
   }
 
@@ -109,33 +133,36 @@ export class Profile {
       useName: u.useName,
     });
     this.editMode.set(true);
-    this.saveSuccess.set(false);
   }
 
   cancelEdit() {
     this.editMode.set(false);
     this.editForm.set({});
-    this.saveSuccess.set(false);
   }
 
+  // ← UTILISE L'ID DIRECTEMENT
   saveEdit() {
     const u = this.user();
     if (!u?.id) return;
 
     this.saving.set(true);
-    this.saveSuccess.set(false);
 
     this.userService.updateUser(u.id, this.editForm()).subscribe({
       next: (updated) => {
         this.user.set(updated);
         this.editMode.set(false);
         this.saving.set(false);
-        this.saveSuccess.set(true);
-        setTimeout(() => this.saveSuccess.set(false), 3000);
+        this.showToast('Modifications enregistrées avec succès !', 'success');
       },
       error: (err) => {
         this.saving.set(false);
-        this.error.set('Erreur lors de la mise à jour');
+        let msg = 'Erreur lors de la mise à jour';
+        if (err.status === 403) {
+          msg = 'Vous ne pouvez modifier que votre propre profil';
+        } else if (err.status === 401) {
+          msg = 'Session expirée. Veuillez vous reconnecter.';
+        }
+        this.showToast(msg, 'error');
         console.error(err);
       },
     });
@@ -177,8 +204,7 @@ export class Profile {
     this.userService.changePassword(u.id, form.new).subscribe({
       next: () => {
         this.closePasswordModal();
-        this.saveSuccess.set(true);
-        setTimeout(() => this.saveSuccess.set(false), 3000);
+        this.showToast('Mot de passe changé avec succès !', 'success');
       },
       error: (err) => {
         this.passwordError.set('Erreur lors du changement de mot de passe');

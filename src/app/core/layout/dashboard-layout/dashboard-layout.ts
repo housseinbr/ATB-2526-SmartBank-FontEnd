@@ -28,7 +28,7 @@ export class DashboardLayout {
   pageTitle = computed(() => {
     const r = this.role();
     switch (r) {
-      case Role.ADMIN: return 'Gestion des utilisateurs';
+      case Role.ADMIN: return 'Tableau de bord';
       case Role.SUPERVISEUR: return 'Tableau de bord';
       default: return 'Tableau de bord';
     }
