@@ -8,6 +8,8 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Icon } from '../../../shared/components/icon/icon';
+import { Toast } from '../../../shared/components/toast/toast';
+import { AlertComponent } from '../../../shared/components/alert/alert';
 import { UserService } from '../../../core/services/user.service';
 import { UserResponse } from '../../../core/models/user-response';
 import { Role } from '../../../core/models/role';
@@ -16,7 +18,7 @@ import { finalize } from 'rxjs';
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, Icon],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, Icon, Toast, AlertComponent],
   templateUrl: './admin-dashboard.html',
   styleUrl: './admin-dashboard.css',
 })
@@ -25,6 +27,19 @@ export class AdminDashboard implements OnInit {
   private fb = inject(FormBuilder);
 
   readonly Role = Role;
+
+  // Toast
+  toastMessage = signal('');
+  toastType = signal<'success' | 'error'>('success');
+  toastVisible = signal(false);
+  private toastTimeout: any;
+
+  // Alert (remplace confirm natif)
+  alertVisible = signal(false);
+  alertTitle = signal('');
+  alertMessage = signal('');
+  alertType = signal<'danger' | 'warning' | 'info'>('danger');
+  private alertResolve: ((value: boolean) => void) | null = null;
 
   users = signal<UserResponse[]>([]);
   loading = signal(false);
@@ -76,6 +91,47 @@ export class AdminDashboard implements OnInit {
 
   ngOnInit() {
     this.loadUsers();
+  }
+
+  // Toast helper
+  showToast(message: string, type: 'success' | 'error' = 'success', duration: number = 3000) {
+    if (this.toastTimeout) {
+      clearTimeout(this.toastTimeout);
+    }
+    this.toastMessage.set(message);
+    this.toastType.set(type);
+    this.toastVisible.set(true);
+
+    this.toastTimeout = setTimeout(() => {
+      this.toastVisible.set(false);
+    }, duration);
+  }
+
+  // Alert helper (remplace window.confirm)
+  showAlert(title: string, message: string = '', type: 'danger' | 'warning' | 'info' = 'danger'): Promise<boolean> {
+    return new Promise((resolve) => {
+      this.alertTitle.set(title);
+      this.alertMessage.set(message);
+      this.alertType.set(type);
+      this.alertVisible.set(true);
+      this.alertResolve = resolve;
+    });
+  }
+
+  onAlertConfirm() {
+    this.alertVisible.set(false);
+    if (this.alertResolve) {
+      this.alertResolve(true);
+      this.alertResolve = null;
+    }
+  }
+
+  onAlertCancel() {
+    this.alertVisible.set(false);
+    if (this.alertResolve) {
+      this.alertResolve(false);
+      this.alertResolve = null;
+    }
   }
 
   // Computed stats
@@ -170,6 +226,7 @@ export class AdminDashboard implements OnInit {
         next: (data: UserResponse[]) => this.users.set(data),
         error: (err: any) => {
           this.error.set('Impossible de charger les utilisateurs. Vérifiez que le backend est démarré.');
+          this.showToast('Impossible de charger les utilisateurs.', 'error');
           console.error(err);
         },
       });
@@ -191,12 +248,19 @@ export class AdminDashboard implements OnInit {
         this.users.update(list =>
           list.map(u => (u.id === updated.id ? updated : u))
         );
+        this.showToast(
+          `Utilisateur ${newStatus === 'actif' ? 'activé' : 'désactivé'} avec succès !`,
+          'success'
+        );
       },
       error: err => {
         console.error('Toggle failed:', err);
-        // Fallback: toggle locally if backend doesn't support it yet
         this.users.update(list =>
           list.map(u => (u.id === user.id ? { ...u, actif: newStatus } : u))
+        );
+        this.showToast(
+          `Utilisateur ${newStatus === 'actif' ? 'activé' : 'désactivé'} avec succès !`,
+          'success'
         );
       },
     });
@@ -205,6 +269,7 @@ export class AdminDashboard implements OnInit {
   onAddUser() {
     if (this.addForm.invalid) {
       this.addForm.markAllAsTouched();
+      this.showToast('Veuillez remplir tous les champs requis correctement.', 'error');
       return;
     }
     const user = this.addForm.value;
@@ -213,10 +278,11 @@ export class AdminDashboard implements OnInit {
         this.showAddModal.set(false);
         this.addForm.reset({ sexe: 'M', role: Role.EMPLOYE, solde: 30 });
         this.loadUsers();
+        this.showToast('Utilisateur ajouté avec succès !', 'success');
       },
       error: err => {
         console.error('Create failed:', err);
-        alert('Erreur lors de la création. Vérifiez que le backend est démarré.');
+        this.showToast('Erreur lors de la création de l\'utilisateur.', 'error');
       },
     });
   }
@@ -224,6 +290,7 @@ export class AdminDashboard implements OnInit {
   onEditUser() {
     if (this.editForm.invalid) {
       this.editForm.markAllAsTouched();
+      this.showToast('Veuillez corriger les erreurs du formulaire.', 'error');
       return;
     }
     const user = this.editForm.value;
@@ -231,10 +298,11 @@ export class AdminDashboard implements OnInit {
       next: () => {
         this.showEditModal.set(false);
         this.loadUsers();
+        this.showToast('Modifications enregistrées avec succès !', 'success');
       },
       error: err => {
         console.error('Update failed:', err);
-        alert('Erreur lors de la mise à jour.');
+        this.showToast('Erreur lors de la mise à jour.', 'error');
       },
     });
   }
@@ -272,13 +340,22 @@ export class AdminDashboard implements OnInit {
     }
   }
 
-  onDeleteUser(user: UserResponse) {
-    if (!confirm(`Supprimer ${user.firstName} ${user.lastName} ?`)) return;
+  async onDeleteUser(user: UserResponse) {
+    const confirmed = await this.showAlert(
+      'Supprimer cet utilisateur ?',
+      `Vous êtes sur le point de supprimer ${user.firstName} ${user.lastName}. Cette action est irréversible.`,
+      'danger'
+    );
+    if (!confirmed) return;
+
     this.userService.deleteUser(user.id).subscribe({
-      next: () => this.loadUsers(),
+      next: () => {
+        this.loadUsers();
+        this.showToast('Utilisateur supprimé avec succès !', 'success');
+      },
       error: err => {
         console.error('Delete failed:', err);
-        alert('Erreur lors de la suppression.');
+        this.showToast('Erreur lors de la suppression.', 'error');
       },
     });
   }

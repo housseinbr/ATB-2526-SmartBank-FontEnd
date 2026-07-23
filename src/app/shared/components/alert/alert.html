@@ -1,0 +1,18 @@
+@if (visible()) {
+  <div class="alert-overlay" (click)="onCancel()">
+    <div class="alert-box" (click)="$event.stopPropagation()">
+      <h3 class="alert__title">{{ title() }}</h3>
+      @if (message()) {
+        <p class="alert__message">{{ message() }}</p>
+      }
+      <div class="alert__actions">
+        <button class="alert__btn alert__btn--cancel" (click)="onCancel()">
+          {{ cancelText() }}
+        </button>
+        <button class="alert__btn alert__btn--confirm" [class.alert__btn--danger]="type() === 'danger'" [class.alert__btn--warning]="type() === 'warning'" (click)="onConfirm()">
+          {{ confirmText() }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

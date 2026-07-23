@@ -19,11 +19,11 @@
   @if (user() && !loading()) {
     <!-- Header -->
     <div class="profile-header">
-      <div class="profile-avatar-large">{{ initials }}</div>
+      <div class="profile-avatar-large">IG</div>
       <div class="profile-header-info">
-        <h1>{{ fullName }}</h1>
+        <h1>Imennnn Gharbiiiiiiiiiiiiiiiiii</h1>
         <span class="profile-role-badge" [style.background]="roleBg" [style.color]="roleColor">{{ roleLabel }}</span>
-        <p class="profile-email">{{ user()?.email }}</p>
+        <p class="profile-email">imen.gharbi@atb.tn</p>
       </div>
       <div class="profile-header-actions">
         <button class="btn btn--primary" (click)="startEdit()">
@@ -44,31 +44,31 @@
         <div class="card-body">
           <div class="info-row">
             <span class="info-label">ID</span>
-            <span class="info-value">#{{ user()?.id }}</span>
+            <span class="info-value">#1</span>
           </div>
           <div class="info-row">
             <span class="info-label">CIN</span>
-            <span class="info-value">{{ user()?.cin }}</span>
+            <span class="info-value">08453210</span>
           </div>
           <div class="info-row">
             <span class="info-label">Nom d'utilisateur</span>
-            <span class="info-value">{{ user()?.useName }}</span>
+            <span class="info-value">igharbiiii</span>
           </div>
           <div class="info-row">
             <span class="info-label">Prénom</span>
-            <span class="info-value">{{ user()?.firstName }}</span>
+            <span class="info-value">Imennnn</span>
           </div>
           <div class="info-row">
             <span class="info-label">Nom</span>
-            <span class="info-value">{{ user()?.lastName }}</span>
+            <span class="info-value">Gharbiiiiiiiiiiiiiiiiii</span>
           </div>
           <div class="info-row">
             <span class="info-label">Sexe</span>
-            <span class="info-value">{{ user()?.sexe }}</span>
+            <span class="info-value">F</span>
           </div>
           <div class="info-row">
             <span class="info-label">Date de naissance</span>
-            <span class="info-value">{{ user()?.birthday | date:'dd/MM/yyyy' }}</span>
+            <span class="info-value">12/03/1985</span>
           </div>
         </div>
       </div>
@@ -80,15 +80,15 @@
         <div class="card-body">
           <div class="info-row">
             <span class="info-label">Email</span>
-            <span class="info-value">{{ user()?.email }}</span>
+            <span class="info-value">imen.gharbi@atb.tn</span>
           </div>
           <div class="info-row">
             <span class="info-label">Téléphone</span>
-            <span class="info-value">{{ user()?.numTel }}</span>
+            <span class="info-value">20123456</span>
           </div>
           <div class="info-row">
             <span class="info-label">Fax</span>
-            <span class="info-value">{{ user()?.numFax || '—' }}</span>
+            <span class="info-value">5345355</span>
           </div>
         </div>
       </div>
@@ -145,7 +145,7 @@
     </div>
   }
 
-  <!-- MODAL ÉDITION (même design que le modal d'ajout/édition du dashboard) -->
+  <!-- MODAL ÉDITION -->
   @if (editMode()) {
     <div class="modal-overlay" (click)="cancelEdit()">
       <div class="modal" (click)="$event.stopPropagation()">

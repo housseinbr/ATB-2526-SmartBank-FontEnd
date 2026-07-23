@@ -1,0 +1,137 @@
+.alert-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 1rem;
+  animation: alert-fade-in 0.2s ease;
+}
+
+@keyframes alert-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.alert-box {
+  background: #ffffff;
+  border-radius: 0.875rem;
+  width: 100%;
+  max-width: 24rem;
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2);
+  animation: alert-slide-up 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes alert-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.alert__icon-wrapper {
+  margin-bottom: 1rem;
+}
+
+.alert__icon {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.alert__icon--danger {
+  background: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
+}
+
+.alert__icon--warning {
+  background: rgba(217, 119, 6, 0.1);
+  color: #d97706;
+}
+
+.alert__icon--info {
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+}
+
+.alert__title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 0.5rem 0;
+}
+
+.alert__message {
+  font-size: 0.875rem;
+  color: #666666;
+  margin: 0 0 1.5rem 0;
+  line-height: 1.5;
+}
+
+.alert__actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.alert__btn {
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s ease;
+  min-width: 6rem;
+}
+
+.alert__btn--cancel {
+  background: #f5f5f5;
+  color: #666666;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.alert__btn--cancel:hover {
+  background: #ebebeb;
+  color: #333333;
+}
+
+.alert__btn--confirm {
+  background: #1a1a1a;
+  color: #ffffff;
+}
+
+.alert__btn--confirm:hover {
+  background: #333333;
+}
+
+.alert__btn--danger {
+  background: #a4182a;
+  color: #ffffff;
+}
+
+.alert__btn--danger:hover {
+  background: #8f1424;
+}
+
+.alert__btn--warning {
+  background: #d97706;
+  color: #ffffff;
+}
+
+.alert__btn--warning:hover {
+  background: #b45309;
+}

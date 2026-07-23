@@ -1,4 +1,21 @@
 <div class="admin-dashboard">
+  <!-- TOAST -->
+  <app-toast
+    [message]="toastMessage()"
+    [type]="toastType()"
+    [visible]="toastVisible()"
+  />
+
+    <!-- ALERT MODAL -->
+  <app-alert
+    [visible]="alertVisible()"
+    [title]="alertTitle()"
+    [message]="alertMessage()"
+    [type]="alertType()"
+    (confirmed)="onAlertConfirm()"
+    (cancelled)="onAlertCancel()"
+  />
+
   <!-- KPI Cards -->
   <div class="kpi-grid">
     <div class="kpi-card">
@@ -195,15 +212,12 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>ID</th>
+              
               <th>CIN</th>
               <th>UTILISATEUR</th>
-              <th>NOM D'UTILISATEUR</th>
               <th>EMAIL</th>
               <th>TÉLÉPHONE</th>
-              <th>FAX</th>
               <th>DATE NAISSANCE</th>
-              <th>SEXE</th>
               <th>RÔLE</th>
               <th>SOLDE</th>
               <th>SALAIRE</th>
@@ -215,7 +229,7 @@
           <tbody>
             @for (user of filteredUsers(); track user.id; let i = $index) {
               <tr>
-                <td class="cell-id">#{{ user.id }}</td>
+                
                 <td class="cell-cin">{{ user.cin }}</td>
                 <td class="cell-user">
                   <div class="user-cell">
@@ -224,15 +238,13 @@
                     </div>
                     <div class="user-cell__info">
                       <span class="user-cell__name">{{ user.firstName }} {{ user.lastName }}</span>
+                      <span class="user-cell__sub">{{ user.useName }}</span>
                     </div>
                   </div>
                 </td>
-                <td class="cell-username">{{ user.useName }}</td>
                 <td class="cell-email">{{ user.email }}</td>
                 <td class="cell-phone">{{ user.numTel }}</td>
-                <td class="cell-fax">{{ user.numFax || '—' }}</td>
                 <td class="cell-date">{{ formatDate(user.birthday) }}</td>
-                <td class="cell-sexe">{{ user.sexe }}</td>
                 <td class="cell-role">
                   <span
                     class="role-badge"
