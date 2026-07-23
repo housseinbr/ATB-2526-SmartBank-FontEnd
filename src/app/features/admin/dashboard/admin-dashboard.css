@@ -1329,3 +1329,58 @@
     font-size: 0.75rem;
   }
 }
+
+/* ============================================
+   SUPERVISOR DROPDOWN IN TABLE
+   ============================================ */
+
+.supervisor-assign-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+  color: var(--text-muted);
+}
+
+.supervisor-assign-btn:hover {
+  background: var(--surface-hover);
+  color: var(--primary);
+}
+
+.supervisor-assign-btn__dash {
+  font-size: 0.875rem;
+  color: #ccc;
+}
+
+.supervisor-dropdown-wrapper {
+  position: relative;
+  min-width: 10rem;
+}
+
+.supervisor-dropdown {
+  width: 100%;
+  padding: 0.375rem 0.625rem;
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  color: var(--text-primary);
+  background: #fff;
+  outline: none;
+  cursor: pointer;
+  box-shadow: 0 0 0 3px var(--primary-light);
+  transition: var(--transition);
+}
+
+.supervisor-dropdown:focus {
+  border-color: var(--primary);
+}
+
+.supervisor-dropdown option {
+  padding: 0.5rem;
+  font-size: 0.8125rem;
+}

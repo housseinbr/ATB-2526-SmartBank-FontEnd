@@ -6,7 +6,7 @@
     [visible]="toastVisible()"
   />
 
-    <!-- ALERT MODAL -->
+  <!-- ALERT MODAL -->
   <app-alert
     [visible]="alertVisible()"
     [title]="alertTitle()"
@@ -212,7 +212,7 @@
         <table class="data-table">
           <thead>
             <tr>
-              
+              <th>ID</th>
               <th>CIN</th>
               <th>UTILISATEUR</th>
               <th>EMAIL</th>
@@ -229,7 +229,7 @@
           <tbody>
             @for (user of filteredUsers(); track user.id; let i = $index) {
               <tr>
-                
+                <td class="cell-id">#{{ user.id }}</td>
                 <td class="cell-cin">{{ user.cin }}</td>
                 <td class="cell-user">
                   <div class="user-cell">
@@ -256,22 +256,73 @@
                 </td>
                 <td class="cell-solde">{{ user.solde }}</td>
                 <td class="cell-salaire">{{ user.salaire | number:'1.0-0' }} DT</td>
+                
+                <!-- ========== COLONNE SUPERVISEUR AVEC DROPDOWN ========== -->
                 <td class="cell-supervisor">
-                  @if (user.superviseur) {
-                    <div class="supervisor-cell">
-                      <span class="supervisor-name">{{ user.superviseur.firstName }} {{ user.superviseur.lastName }}</span>
-                      <button
-                        class="action-btn action-btn--view"
-                        (click)="openSupervisorModal(user.superviseur)"
-                        title="Voir le superviseur"
-                      >
-                        <app-icon name="eye" [size]="14" />
-                      </button>
-                    </div>
+                  @if (user.role === Role.EMPLOYE || user.role === Role.SUPERVISEUR) {
+                    @if (editingSupervisorRowId() === user.id) {
+                      <!-- Mode édition : dropdown visible -->
+                      <div class="supervisor-dropdown-wrapper">
+                        <select
+                          class="supervisor-dropdown"
+                          (change)="onAssignSupervisor(user, $any($event.target).value)"
+                          (blur)="closeSupervisorDropdown()"
+                          [value]="user.superviseur?.id ?? ''"
+                          autofocus
+                        >
+                          <option value="">— Aucun</option>  <!-- value="" envoie chaîne vide -->
+                          @for (sup of getAvailableSupervisorsFor(user); track sup.id) {
+                            <option [value]="sup.id">{{ sup.firstName }} {{ sup.lastName }}</option>
+                          }
+                        </select>
+                      </div>
+                    } @else {
+                      <!-- Mode affichage : texte cliquable -->
+                      <!-- Mode affichage : superviseur assigné -->
+                      @if (user.superviseur) {
+                        <div class="supervisor-cell">
+                          <span class="supervisor-name">{{ user.superviseur.firstName }} {{ user.superviseur.lastName }}</span>
+                          <button
+                            class="action-btn action-btn--view"
+                            (click)="openSupervisorModal(user.superviseur)"
+                            title="Voir le superviseur"
+                          >
+                            <app-icon name="eye" [size]="14" />
+                          </button>
+                          <button
+                            class="action-btn action-btn--edit"
+                            (click)="openSupervisorDropdown(user.id)"
+                            title="Changer le superviseur"
+                          >
+                            <app-icon name="pencil" [size]="14" />
+                          </button>
+                          <!-- 🗑️ BOUTON POUBELLE POUR RETIRER -->
+                          <button
+                            class="action-btn action-btn--delete"
+                            (click)="onAssignSupervisor(user, '')"
+                            title="Retirer le superviseur"
+                          >
+                            <app-icon name="trash" [size]="14" />
+                          </button>
+                        </div>
+                      } @else {
+                        <!-- Mode affichage : aucun superviseur -->
+                        <button
+                          class="supervisor-assign-btn"
+                          (click)="openSupervisorDropdown(user.id)"
+                          title="Assigner un superviseur"
+                        >
+                          <span class="supervisor-assign-btn__dash">—</span>
+                          <app-icon name="plus" [size]="12" />
+                        </button>
+                      }
+                    }
                   } @else {
                     <span class="cell-empty">—</span>
                   }
                 </td>
+                <!-- ========== FIN COLONNE SUPERVISEUR ========== -->
+                
                 <td class="cell-status">
                   <button
                     class="toggle-btn"

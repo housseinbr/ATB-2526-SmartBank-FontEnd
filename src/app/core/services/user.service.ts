@@ -75,4 +75,11 @@ export class UserService {
   changePassword(id: number, newPassword: string): Observable<void> {
   return this.http.patch<void>(`${this.baseUrl}/${id}/password`, newPassword);
 } 
+
+ assignSuperviseur(userId: number, superviseurId: number): Observable<UserResponse> {
+  return this.http.patch<UserResponse>(
+    `${this.baseUrl}/${userId}/superviseur/${superviseurId}`, 
+    {}
+  );
+}
 }

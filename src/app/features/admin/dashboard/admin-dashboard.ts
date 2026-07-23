@@ -41,6 +41,9 @@ export class AdminDashboard implements OnInit {
   alertType = signal<'danger' | 'warning' | 'info'>('danger');
   private alertResolve: ((value: boolean) => void) | null = null;
 
+  // Dropdown superviseur (row en cours d'édition)
+  editingSupervisorRowId = signal<number | null>(null);
+
   users = signal<UserResponse[]>([]);
   loading = signal(false);
   error = signal<string | null>(null);
@@ -132,6 +135,82 @@ export class AdminDashboard implements OnInit {
       this.alertResolve(false);
       this.alertResolve = null;
     }
+  }
+
+  // Liste des superviseurs disponibles (tous les users avec role SUPERVISEUR)
+  availableSupervisors = computed(() => {
+    return this.users().filter(u => u.role === Role.SUPERVISEUR);
+  });
+
+  // Ouvrir le dropdown pour une ligne
+  openSupervisorDropdown(userId: number) {
+    this.editingSupervisorRowId.set(userId);
+  }
+
+  // Fermer le dropdown
+  closeSupervisorDropdown() {
+    this.editingSupervisorRowId.set(null);
+  }
+
+  onAssignSupervisor(user: UserResponse, supervisorId: string) {
+  this.closeSupervisorDropdown();
+
+  const isRemoving = supervisorId === '' || supervisorId === '0';
+  
+  const sup = isRemoving
+    ? null
+    : (this.availableSupervisors().find(s => s.id === Number(supervisorId)) ?? null);
+
+  if (isRemoving && user.superviseur) {
+    this.showAlert(
+      'Retirer le superviseur ?',
+      `Voulez-vous retirer ${user.superviseur.firstName} ${user.superviseur.lastName} comme superviseur de ${user.firstName} ${user.lastName} ?`,
+      'warning'
+    ).then(confirmed => {
+      if (confirmed) {
+        this.doAssignSupervisor(user, null);
+      }
+    });
+    return;
+  }
+
+  this.doAssignSupervisor(user, sup);
+}
+
+// Méthode privée pour faire l'appel API
+private doAssignSupervisor(user: UserResponse, sup: UserResponse | null) {
+  const payload = sup ? sup.id : 0;
+
+  this.userService.assignSuperviseur(user.id, payload).subscribe({
+    next: () => {
+      this.users.update(list =>
+        list.map(u => {
+          if (u.id !== user.id) return u;
+          return {
+            ...u,
+            idSuperviseur: sup ? sup.id : null,
+            superviseur: sup ? { ...sup } : null
+          };
+        })
+      );
+      
+      this.showToast(
+        sup
+          ? `Superviseur ${sup.firstName} ${sup.lastName} assigné !`
+          : 'Superviseur retiré !',
+        'success'
+      );
+    },
+    error: err => {
+      console.error('Assign failed:', err);
+      this.showToast('Erreur lors de l\'assignation.', 'error');
+    },
+  });
+}
+
+  // Liste des superviseurs disponibles pour un user (exclure lui-même)
+  getAvailableSupervisorsFor(user: UserResponse): UserResponse[] {
+    return this.availableSupervisors().filter(s => s.id !== user.id);
   }
 
   // Computed stats
