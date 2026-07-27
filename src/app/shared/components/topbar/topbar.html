@@ -19,13 +19,38 @@
       <span class="topbar__notifications-badge">2</span>
     </div>
 
-    <div class="topbar__profile">
-      <div class="topbar__profile-avatar">{{ initials }}</div>
-      <div class="topbar__profile-info">
-        <span class="topbar__profile-name">{{ fullName }}</span>
-        <span class="topbar__profile-email">{{ user()?.email }}</span>
+    <div class="topbar__profile-wrapper">
+      <div class="topbar__profile" (click)="toggleProfileMenu()">
+        <div class="topbar__profile-avatar">{{ initials }}</div>
+        <div class="topbar__profile-info">
+          <span class="topbar__profile-name">{{ fullName }}</span>
+          <span class="topbar__profile-email">{{ user()?.email }}</span>
+        </div>
+        <app-icon
+          class="topbar__profile-chevron"
+          [class.topbar__profile-chevron--open]="isProfileMenuOpen"
+          name="chevron-down"
+          [size]="14"
+        />
       </div>
-      <app-icon class="topbar__profile-chevron" name="chevron-down" [size]="14" />
+
+      @if (isProfileMenuOpen) {
+        <div class="topbar__profile-dropdown">
+          <button type="button" class="topbar__profile-dropdown-item" (click)="goToProfile()">
+            <app-icon name="user" [size]="14" />
+            <span>Profil</span>
+          </button>
+          <div class="topbar__profile-dropdown-divider"></div>
+          <button
+            type="button"
+            class="topbar__profile-dropdown-item topbar__profile-dropdown-item--danger"
+            (click)="logout()"
+          >
+            <app-icon name="log-out" [size]="14" />
+            <span>Déconnexion</span>
+          </button>
+        </div>
+      }
     </div>
   </div>
 </header>

@@ -3,10 +3,12 @@ import { Login } from './features/auth/login/login';
 import { authGuard } from './core/guards/auth.guard';
 import { roleGuard } from './core/guards/role.guard';
 import { Role } from './core/models/role';
+import { ForgotPassword } from './features/auth/forgot-password/forgot-password';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: 'login', component: Login },
+  { path: 'forgot-password', component: ForgotPassword },
 
   // Dashboard layout avec sidebar + topbar
   {
@@ -35,6 +37,7 @@ export const routes: Routes = [
         loadComponent: () => import('./features/profile/profile').then(m => m.Profile),
       },
       { path: '', redirectTo: 'employe', pathMatch: 'full' },
+      
     ],
   },
 

@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Toast, ToastType } from '../../../shared/components/toast/toast';
 import { AuthService } from '../../../core/services/auth.service';
@@ -8,7 +8,7 @@ import { Role } from '../../../core/models/role';
 
 @Component({
   selector: 'app-login',
-  imports: [CommonModule, ReactiveFormsModule, Toast],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, Toast],
   templateUrl: './login.html',
   styleUrl: './login.css',
 })

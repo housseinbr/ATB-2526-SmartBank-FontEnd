@@ -17,7 +17,7 @@ export const SIDEBAR_CONFIG: Record<Role, SidebarConfig> = {
     brandLabel: 'Espace Admin',
     items: [
       { label: 'Utilisateurs', route: '/dashboard/admin', icon: 'users' },
-      { label: 'Mon Profil', route: '/dashboard/profile', icon: 'user' },
+      
     ],
   },
   [Role.SUPERVISEUR]: {
@@ -25,14 +25,14 @@ export const SIDEBAR_CONFIG: Record<Role, SidebarConfig> = {
     items: [
       { label: 'Mon équipe', route: '/dashboard/superviseur', icon: 'users' },
       { label: 'Demandes', route: '/dashboard/superviseur', icon: 'inbox', badgeKey: 'demandes' },
-      { label: 'Mon Profil', route: '/dashboard/profile', icon: 'user' },
+      
     ],
   },
   [Role.EMPLOYE]: {
     brandLabel: 'Espace Employé',
     items: [
       { label: 'Mes demandes', route: '/dashboard/employe', icon: 'inbox' },
-      { label: 'Mon Profil', route: '/dashboard/profile', icon: 'user' },
+      
     ],
   },
 };
