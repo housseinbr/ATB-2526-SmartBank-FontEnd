@@ -8,9 +8,8 @@ export enum TypeAbsence {
 
 // ⚠️ À CONFIRMER : valeurs devinées, en attente du fichier DemiJournee.java réel
 export enum DemiJournee {
-  MATIN = 'MATIN',
-  APRES_MIDI = 'APRES_MIDI',
-  JOURNEE_COMPLETE = 'JOURNEE_COMPLETE',
+  PART_APRES_MIDI = 'PART_APRES_MIDI',
+  RETOUR_APRES_MIDI = 'RETOUR_APRES_MIDI',
 }
 
 export enum StatusAbsence {
@@ -29,9 +28,8 @@ export const TYPE_ABSENCE_LABELS: Record<TypeAbsence, string> = {
 };
 
 export const DEMI_JOURNEE_LABELS: Record<DemiJournee, string> = {
-  [DemiJournee.MATIN]: 'Matin',
-  [DemiJournee.APRES_MIDI]: 'Après-midi',
-  [DemiJournee.JOURNEE_COMPLETE]: 'Journée complète',
+  [DemiJournee.PART_APRES_MIDI]: 'Part après-midi',
+  [DemiJournee.RETOUR_APRES_MIDI]: 'Retour après-midi',
 };
 
 export const STATUS_LABELS: Record<StatusAbsence, string> = {

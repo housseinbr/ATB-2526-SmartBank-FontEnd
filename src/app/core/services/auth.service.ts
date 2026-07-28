@@ -23,7 +23,7 @@ export class AuthService {
   private baseUrl = `${environment.apiUrl}/auth`;
 
   // signal interne, réhydraté depuis le localStorage au démarrage
-  private currentUserSignal = signal<AuthResponse | null>(this.readStoredUser());
+  private currentUserSignal = signal<AuthResponse | null>(this.readStoredSession());
 
   currentUser = this.currentUserSignal.asReadonly();
   isAuthenticated = computed(() => this.currentUserSignal() !== null);
@@ -55,17 +55,11 @@ export class AuthService {
   }
 
   getToken(): string | null {
-    const token = localStorage.getItem(TOKEN_KEY);
-    if (!token) {
-      return null;
-    }
+    return localStorage.getItem(TOKEN_KEY);
+  }
 
-    if (this.isTokenExpired(token)) {
-      this.logout();
-      return null;
-    }
-
-    return token;
+  hasSession(): boolean {
+    return this.currentUserSignal() !== null && this.getToken() !== null;
   }
 
   hasRole(...roles: Role[]): boolean {
@@ -88,23 +82,15 @@ export class AuthService {
     return raw ? (JSON.parse(raw) as AuthResponse) : null;
   }
 
-  private isTokenExpired(token: string): boolean {
-    try {
-      const payloadBase64 = token.split('.')[1];
-      if (!payloadBase64) {
-        return true;
-      }
+  private readStoredSession(): AuthResponse | null {
+    const token = localStorage.getItem(TOKEN_KEY);
+    const user = this.readStoredUser();
 
-      const payloadJson = atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/'));
-      const payload = JSON.parse(payloadJson) as { exp?: number };
-      if (!payload.exp) {
-        return true;
-      }
-
-      return Date.now() >= payload.exp * 1000;
-    } catch {
-      return true;
+    if (!token || !user) {
+      return null;
     }
+
+    return user;
   }
 
   get currentRole(): Role {

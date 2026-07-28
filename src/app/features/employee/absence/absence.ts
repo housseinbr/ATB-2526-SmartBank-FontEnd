@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Toast, ToastType } from '../../../shared/components/toast/toast';
 import { AlertComponent } from '../../../shared/components/alert/alert';
 import { AbsenceApiService } from '../../../core/services/absence.service';
+import { AuthService } from '../../../core/services/auth.service';
 import {
   Absence,
   StatusAbsence,
@@ -48,7 +49,7 @@ export class MesAbsences {
 
   form: FormGroup;
 
-  constructor(private fb: FormBuilder, private api: AbsenceApiService) {
+  constructor(private fb: FormBuilder, private api: AbsenceApiService, private authService: AuthService) {
     // Le formulaire est construit ici (et pas en propriété de classe) car
     // les initialiseurs de propriétés s'exécutent avant le corps du
     // constructeur : "this.fb" ne serait pas encore assigné sinon.
@@ -64,6 +65,12 @@ export class MesAbsences {
   }
 
   load() {
+    if (!this.authService.getToken()) {
+      this.loading.set(false);
+      this.notify('Session expirée ou absente, veuillez vous reconnecter', 'error');
+      return;
+    }
+
     this.loading.set(true);
     this.api.getAll().subscribe({
       next: (data) => {
@@ -129,6 +136,7 @@ export class MesAbsences {
       dateEnd,
       demiJournee: value.demiJournee,
       comment: value.comment ?? '',
+      status: StatusAbsence.EN_ATTENTE,
     };
 
     const id = this.editingId();

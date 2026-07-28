@@ -13,6 +13,7 @@ export class AbsenceApiService {
 
   private authHeaders(): HttpHeaders {
     const token = this.authService.getToken();
+    console.debug('[AbsenceApiService] token present:', !!token);
     return token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : new HttpHeaders();
   }
 
@@ -24,12 +25,12 @@ export class AbsenceApiService {
     return this.http.get<Absence>(`${this.baseUrl}/${id}`, { headers: this.authHeaders() });
   }
 
-  create(absence: Absence): Observable<Absence> {
-    return this.http.post<Absence>(this.baseUrl, absence, { headers: this.authHeaders() });
+  create(absence: Absence): Observable<void> {
+    return this.http.post<void>(this.baseUrl, absence, { headers: this.authHeaders() });
   }
 
-  update(id: number, absence: Absence): Observable<Absence> {
-    return this.http.put<Absence>(`${this.baseUrl}/${id}`, absence, { headers: this.authHeaders() });
+  update(id: number, absence: Absence): Observable<void> {
+    return this.http.put<void>(`${this.baseUrl}/${id}`, absence, { headers: this.authHeaders() });
   }
 
   // Annulation = suppression de la demande (uniquement si EN_ATTENTE)
