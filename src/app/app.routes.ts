@@ -31,13 +31,18 @@ export const routes: Routes = [
         canActivate: [roleGuard(Role.EMPLOYE)],
         loadComponent: () => import('./features/employee/dashboard/employee-dashboard').then(m => m.EmployeeDashboard),
       },
+      {
+        path: 'absences',
+        canActivate: [roleGuard(Role.EMPLOYE)],
+        loadComponent: () => import('./features/employee/absence/absence').then(m => m.MesAbsences),
+      },
       // Profile - accessible to all authenticated users (inside layout)
       {
         path: 'profile',
         loadComponent: () => import('./features/profile/profile').then(m => m.Profile),
       },
       { path: '', redirectTo: 'employe', pathMatch: 'full' },
-      
+
     ],
   },
 

@@ -8,6 +8,13 @@ import { Role } from '../models/role';
 
 const TOKEN_KEY = 'atb_token';
 const USER_KEY = 'atb_user';
+// Legacy: du code ailleurs dans l'app lit/écrit encore directement ces clés
+// (userEmail, userId) au lieu de passer par AuthService. Idéalement, il
+// faudrait remplacer ces usages par authService.currentUser()/getToken()
+// pour n'avoir qu'une seule source de vérité. En attendant, on les nettoie
+// nous-mêmes au logout pour éviter les données fantômes d'un ancien compte.
+const LEGACY_EMAIL_KEY = 'userEmail';
+const LEGACY_USER_ID_KEY = 'userId';
 
 @Injectable({
   providedIn: 'root',
@@ -42,11 +49,23 @@ export class AuthService {
   logout(): void {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
+    localStorage.removeItem(LEGACY_EMAIL_KEY);
+    localStorage.removeItem(LEGACY_USER_ID_KEY);
     this.currentUserSignal.set(null);
   }
 
   getToken(): string | null {
-    return localStorage.getItem(TOKEN_KEY);
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!token) {
+      return null;
+    }
+
+    if (this.isTokenExpired(token)) {
+      this.logout();
+      return null;
+    }
+
+    return token;
   }
 
   hasRole(...roles: Role[]): boolean {
@@ -57,6 +76,10 @@ export class AuthService {
   private setSession(response: AuthResponse): void {
     localStorage.setItem(TOKEN_KEY, response.token);
     localStorage.setItem(USER_KEY, JSON.stringify(response));
+    // On synchronise aussi les clés legacy pour éviter qu'un vieux composant
+    // continue d'afficher l'email/id d'un compte précédent.
+    localStorage.setItem(LEGACY_EMAIL_KEY, response.email ?? '');
+    localStorage.setItem(LEGACY_USER_ID_KEY, String((response as any).id ?? (response as any).userId ?? ''));
     this.currentUserSignal.set(response);
   }
 
@@ -65,21 +88,37 @@ export class AuthService {
     return raw ? (JSON.parse(raw) as AuthResponse) : null;
   }
 
-  // ← AJOUTE CES 2 GETTERS
+  private isTokenExpired(token: string): boolean {
+    try {
+      const payloadBase64 = token.split('.')[1];
+      if (!payloadBase64) {
+        return true;
+      }
+
+      const payloadJson = atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/'));
+      const payload = JSON.parse(payloadJson) as { exp?: number };
+      if (!payload.exp) {
+        return true;
+      }
+
+      return Date.now() >= payload.exp * 1000;
+    } catch {
+      return true;
+    }
+  }
+
   get currentRole(): Role {
-  return this.role() ?? Role.SUPERVISEUR;  // ← Role.SUPERVISEUR pas 'superviseur'
-}
+    return this.role() ?? Role.SUPERVISEUR;
+  }
 
   get badges(): { notifications?: number; demandes?: number } {
-    // ← Récupère depuis ton backend ou retourne des valeurs par défaut
     return {
       notifications: 0,
-      demandes: 0
+      demandes: 0,
     };
   }
 
-  
-forgotPassword(email: string): Observable<void> {
-  return this.http.post<void>(`${this.baseUrl}/forgot-password`, { email });
-}
+  forgotPassword(email: string): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/forgot-password`, { email });
+  }
 }

@@ -32,6 +32,7 @@ export const SIDEBAR_CONFIG: Record<Role, SidebarConfig> = {
     brandLabel: 'Espace Employé',
     items: [
       { label: 'Mes demandes', route: '/dashboard/employe', icon: 'inbox' },
+      { label: 'Mes absences', route: '/dashboard/absences', icon: 'calendar' },
       
     ],
   },

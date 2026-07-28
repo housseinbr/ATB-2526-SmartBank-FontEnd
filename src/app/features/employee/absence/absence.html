@@ -1,0 +1,112 @@
+<div class="employee-dashboard">
+  <div class="page-header">
+    <h1 class="page-title">Mes absences</h1>
+    <button class="btn btn--primary" (click)="openCreate()">
+      <span>+ Nouvelle demande</span>
+    </button>
+  </div>
+
+  <div class="data-card">
+    <div class="data-card__header">
+      <h2 class="data-card__title">Historique de mes demandes</h2>
+      <span class="data-card__subtitle">{{ absences().length }} demande(s)</span>
+    </div>
+
+    @if (loading()) {
+      <div class="empty-state">Chargement...</div>
+    } @else if (absences().length === 0) {
+      <div class="empty-state">Aucune demande d'absence pour le moment</div>
+    } @else {
+      <div class="request-list">
+        @for (a of absences(); track a.idAbcance) {
+          <div class="request-item">
+            <div class="request-item__indicator" [class]="'request-item__indicator--' + statusColors[a.status!]"></div>
+            <div class="request-item__content">
+              <span class="request-item__type">{{ typeLabels[a.type] }}</span>
+              <span class="request-item__dates">{{ a.dateStart }} → {{ a.dateEnd }}</span>
+              @if (a.comment) {
+                <span class="request-item__dates">{{ a.comment }}</span>
+              }
+            </div>
+            <span class="request-item__status" [class]="'request-item__status--' + statusColors[a.status!]">
+              {{ statusLabels[a.status!] }}
+            </span>
+            @if (a.status === 'EN_ATTENTE') {
+              <div class="request-item__actions">
+                <button class="icon-btn" (click)="openEdit(a)" title="Modifier">✎</button>
+                <button class="icon-btn icon-btn--danger" (click)="askCancel(a)" title="Annuler">✕</button>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Modal formulaire ajout / modification -->
+@if (showForm()) {
+  <div class="form-overlay" (click)="closeForm()">
+    <div class="form-box" (click)="$event.stopPropagation()">
+      <h3 class="alert__title">{{ editingId() ? 'Modifier la demande' : 'Nouvelle demande d\'absence' }}</h3>
+
+      <form [formGroup]="form" (ngSubmit)="submitForm()" class="absence-form">
+        <div class="form-group">
+          <label>Type d'absence</label>
+          <select formControlName="type">
+            <option [ngValue]="null">Sélectionner...</option>
+            @for (t of typeOptions; track t) {
+              <option [ngValue]="t">{{ typeLabels[t] }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Date de début</label>
+            <input type="date" formControlName="dateStart" />
+          </div>
+          <div class="form-group">
+            <label>Date de fin</label>
+            <input type="date" formControlName="dateEnd" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Demi-journée (optionnel)</label>
+          <select formControlName="demiJournee">
+            <option [ngValue]="null">Journée(s) complète(s)</option>
+            @for (d of demiOptions; track d) {
+              <option [ngValue]="d">{{ demiLabels[d] }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Commentaire</label>
+          <textarea formControlName="comment" rows="3" placeholder="Motif ou précision..."></textarea>
+        </div>
+
+        <div class="alert__actions">
+          <button type="button" class="alert__btn alert__btn--cancel" (click)="closeForm()">Annuler</button>
+          <button type="submit" class="alert__btn alert__btn--confirm">
+            {{ editingId() ? 'Enregistrer' : 'Envoyer la demande' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<app-alert
+  [visible]="showCancelAlert()"
+  title="Annuler la demande ?"
+  message="Cette action est irréversible. Voulez-vous vraiment annuler cette demande d'absence ?"
+  type="danger"
+  confirmText="Oui, annuler"
+  cancelText="Retour"
+  (confirmed)="confirmCancel()"
+  (cancelled)="cancelDialogClosed()"
+/>
+
+<app-toast [message]="toastMessage()" [type]="toastType()" [visible]="toastVisible()" />
