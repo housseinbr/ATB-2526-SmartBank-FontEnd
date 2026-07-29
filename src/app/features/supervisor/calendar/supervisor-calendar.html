@@ -1,0 +1,122 @@
+<div class="supervisor-calendar">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Calendrier des absences</h1>
+      <p class="page-subtitle">Vue plus lisible des demandes de l’équipe et de vos propres absences</p>
+    </div>
+    <div class="toolbar">
+      <div class="nav-group">
+        <button class="nav-btn" type="button" (click)="previous()">‹</button>
+        <button class="nav-btn nav-btn--ghost" type="button" (click)="today()">Aujourd’hui</button>
+        <button class="nav-btn" type="button" (click)="next()">›</button>
+      </div>
+      <div class="mode-switch">
+        <button class="mode-switch__btn" [class.mode-switch__btn--active]="mode() === 'month'" (click)="setMode('month')">Mois</button>
+        <button class="mode-switch__btn" [class.mode-switch__btn--active]="mode() === 'week'" (click)="setMode('week')">Semaine</button>
+        <button class="mode-switch__btn" [class.mode-switch__btn--active]="mode() === 'year'" (click)="setMode('year')">Année</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-card">
+    <div>
+      <p class="hero-card__kicker">{{ modeLabel() }}</p>
+      <h2 class="hero-card__title">{{ headerLabel() }}</h2>
+      <p class="hero-card__subtitle">Les couleurs distinguent les statuts et les types de demandes.</p>
+    </div>
+    <div class="hero-card__legend">
+      <span><i class="dot dot--green"></i> Validé</span>
+      <span><i class="dot dot--orange"></i> En attente</span>
+      <span><i class="dot dot--red"></i> Refusé</span>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card"><span>Demandes</span><strong>{{ stats().total }}</strong></div>
+    <div class="kpi-card"><span>En attente</span><strong>{{ stats().pending }}</strong></div>
+    <div class="kpi-card"><span>Validées</span><strong>{{ stats().approved }}</strong></div>
+    <div class="kpi-card"><span>Refusées</span><strong>{{ stats().refused }}</strong></div>
+  </div>
+
+  @if (loading()) {
+    <div class="empty-state">Chargement...</div>
+  } @else {
+    @if (mode() === 'month') {
+      <div class="calendar-shell">
+        <div class="calendar-weekdays">
+          @for (day of ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']; track day) {
+            <div>{{ day }}</div>
+          }
+        </div>
+        <div class="calendar-month">
+          @for (cell of monthCells(); track cell.date.toISOString()) {
+            <div class="day-cell" [class.day-cell--muted]="!cell.inCurrentPeriod" [class.day-cell--today]="isToday(cell.date)">
+              <div class="day-cell__head">
+                <span class="day-cell__number">{{ cell.dayNumber }}</span>
+              </div>
+              <div class="day-cell__events">
+                @for (event of cell.items.slice(0, 2); track event.idAbcance) {
+                  <div class="mini-event" [class]="'mini-event--' + statusColors[event.status!]">
+                    <span class="mini-event__dot"></span>
+                    <span class="mini-event__text">{{ event.user?.firstName }} {{ event.user?.lastName }}</span>
+                  </div>
+                }
+                @if (cell.items.length > 2) {
+                  <div class="mini-event mini-event--more">+{{ cell.items.length - 2 }} autres</div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    } @else if (mode() === 'week') {
+      <div class="week-grid">
+        @for (cell of weekCells(); track cell.date.toISOString()) {
+          <div class="week-day">
+            <div class="week-day__header">
+              <span>{{ cell.dayName }}</span>
+              <strong>{{ cell.dayNumber }}</strong>
+            </div>
+            <div class="week-day__body">
+              @for (event of cell.items; track event.idAbcance) {
+                <div class="week-event" [class]="'week-event--' + statusColors[event.status!]">
+                  <span class="week-event__type">{{ typeLabels[event.type] }}</span>
+                  <span class="week-event__name">{{ event.user?.firstName }} {{ event.user?.lastName }}</span>
+                  <span class="week-event__meta">{{ event.dateStart }} → {{ event.dateEnd }}</span>
+                </div>
+              }
+              @if (cell.items.length === 0) {
+                <div class="empty-slot">Aucune absence</div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="year-grid">
+        @for (month of yearCards(); track month.monthIndex) {
+          <div class="year-card">
+            <div class="year-card__header">
+              <div>
+                <h3>{{ month.label }}</h3>
+                <span>{{ month.count }} demande(s)</span>
+              </div>
+            </div>
+            <div class="year-card__body">
+              @for (event of month.items; track event.idAbcance) {
+                <div class="year-event">
+                  <span class="year-event__dot" [class]="'year-event__dot--' + statusColors[event.status!]"></span>
+                  <span class="year-event__name">{{ event.user?.firstName }} {{ event.user?.lastName }}</span>
+                  <span class="year-event__meta">{{ event.dateStart }}</span>
+                </div>
+              }
+              @if (month.items.length === 0) {
+                <div class="empty-slot">Aucune absence</div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+</div>

@@ -1,3 +1,5 @@
+import { UserResponse } from './user-response';
+
 export enum TypeAbsence {
   CONGE = 'CONGE',
   PAYE = 'PAYE',
@@ -47,7 +49,7 @@ export const STATUS_COLORS: Record<StatusAbsence, 'green' | 'orange' | 'red'> = 
 
 export interface Absence {
   idAbcance?: number;
-  user?: { idUser: number };
+  user?: UserResponse;
   type: TypeAbsence;
   comment?: string;
   dateStart: string; // format ISO 'YYYY-MM-DD'
@@ -62,4 +64,14 @@ export interface AbsenceFormValue {
   dateEnd: string;
   demiJournee: DemiJournee | null;
   comment: string;
+}
+
+export interface HistorySold {
+  idHistorySold: number;
+  user: UserResponse;
+  idAbcence?: number | null;
+  motif: string;
+  dateAction: string;
+  soldeBefore: number;
+  soldeAfter: number;
 }

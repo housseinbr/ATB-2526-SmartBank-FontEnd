@@ -23,9 +23,10 @@ export const SIDEBAR_CONFIG: Record<Role, SidebarConfig> = {
   [Role.SUPERVISEUR]: {
     brandLabel: 'Espace Superviseur',
     items: [
-      { label: 'Mon équipe', route: '/dashboard/superviseur', icon: 'users' },
-      { label: 'Demandes', route: '/dashboard/superviseur', icon: 'inbox', badgeKey: 'demandes' },
-      
+      { label: 'Mon équipe', route: '/dashboard/superviseur/team', icon: 'users' },
+      { label: 'Demandes', route: '/dashboard/superviseur/demandes', icon: 'inbox' },
+      { label: 'Calendrier', route: '/dashboard/superviseur/calendrier', icon: 'calendar' },
+      { label: 'Mes absences', route: '/dashboard/absences', icon: 'calendar' },
     ],
   },
   [Role.EMPLOYE]: {

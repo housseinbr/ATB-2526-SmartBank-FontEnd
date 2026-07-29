@@ -24,7 +24,21 @@ export const routes: Routes = [
       {
         path: 'superviseur',
         canActivate: [roleGuard(Role.SUPERVISEUR)],
-        loadComponent: () => import('./features/supervisor/dashboard/supervisor-dashboard').then(m => m.SupervisorDashboard),
+        children: [
+          { path: '', redirectTo: 'team', pathMatch: 'full' },
+          {
+            path: 'team',
+            loadComponent: () => import('./features/supervisor/dashboard/supervisor-dashboard').then(m => m.SupervisorDashboard),
+          },
+          {
+            path: 'demandes',
+            loadComponent: () => import('./features/supervisor/requests/supervisor-requests').then(m => m.SupervisorRequests),
+          },
+          {
+            path: 'calendrier',
+            loadComponent: () => import('./features/supervisor/calendar/supervisor-calendar').then(m => m.SupervisorCalendar),
+          },
+        ],
       },
       {
         path: 'employe',
@@ -33,7 +47,7 @@ export const routes: Routes = [
       },
       {
         path: 'absences',
-        canActivate: [roleGuard(Role.EMPLOYE)],
+        canActivate: [roleGuard(Role.EMPLOYE, Role.SUPERVISEUR)],
         loadComponent: () => import('./features/employee/absence/absence').then(m => m.MesAbsences),
       },
       // Profile - accessible to all authenticated users (inside layout)

@@ -1,0 +1,105 @@
+<app-toast [message]="toastMessage()" [type]="toastType()" [visible]="toastVisible()" />
+
+<app-alert
+  [visible]="alertVisible()"
+  [title]="alertTitle()"
+  [message]="alertMessage()"
+  type="warning"
+  confirmText="Confirmer"
+  cancelText="Annuler"
+  (confirmed)="onAlertConfirm()"
+  (cancelled)="onAlertCancel()"
+/>
+
+<div class="supervisor-requests">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Demandes de l’équipe</h1>
+      <p class="page-subtitle">Traitement des demandes en attente et suivi global</p>
+    </div>
+    <div class="filter-row">
+      <button class="filter-chip" [class.filter-chip--active]="statusFilter() === 'ALL'" (click)="statusFilter.set('ALL')">Toutes</button>
+      <button class="filter-chip" [class.filter-chip--active]="statusFilter() === StatusAbsence.EN_ATTENTE" (click)="statusFilter.set(StatusAbsence.EN_ATTENTE)">En attente</button>
+      <button class="filter-chip" [class.filter-chip--active]="statusFilter() === StatusAbsence.VALIDE" (click)="statusFilter.set(StatusAbsence.VALIDE)">Validées</button>
+      <button class="filter-chip" [class.filter-chip--active]="statusFilter() === StatusAbsence.REFUSE" (click)="statusFilter.set(StatusAbsence.REFUSE)">Refusées</button>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <span class="kpi-card__label">Total</span>
+      <strong class="kpi-card__value">{{ stats().total }}</strong>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-card__label">En attente</span>
+      <strong class="kpi-card__value">{{ stats().pending }}</strong>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-card__label">Validées</span>
+      <strong class="kpi-card__value">{{ stats().approved }}</strong>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-card__label">Refusées</span>
+      <strong class="kpi-card__value">{{ stats().refused }}</strong>
+    </div>
+  </div>
+
+  <div class="data-card">
+    <div class="data-card__header">
+      <h2 class="data-card__title">Tableau des demandes</h2>
+      <span class="data-card__subtitle">{{ filteredRequests().length }} demande(s)</span>
+    </div>
+
+    @if (loading()) {
+      <div class="empty-state">Chargement...</div>
+    } @else if (filteredRequests().length === 0) {
+      <div class="empty-state">Aucune demande à afficher</div>
+    } @else {
+      <div class="table-wrapper">
+        <table class="requests-table">
+          <thead>
+            <tr>
+              <th>Collaborateur</th>
+              <th>Type</th>
+              <th>Période</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (request of filteredRequests(); track request.idAbcance) {
+              <tr>
+                <td>
+                  <div class="user-cell">
+                    <div class="user-cell__avatar">{{ getInitials(request.user?.firstName, request.user?.lastName) }}</div>
+                    <div class="user-cell__info">
+                      <span class="user-cell__name">{{ request.user?.firstName }} {{ request.user?.lastName }}</span>
+                      <span class="user-cell__sub">{{ request.user?.role }} · Solde {{ request.user?.solde | number:'1.0-2' }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td>{{ typeLabels[request.type] }}</td>
+                <td>{{ request.dateStart }} → {{ request.dateEnd }}</td>
+                <td>
+                  <span class="status-badge" [class]="'status-badge--' + statusColors[request.status!]">
+                    {{ statusLabels[request.status!] }}
+                  </span>
+                </td>
+                <td>
+                  @if (isPending(request)) {
+                    <div class="actions">
+                      <button class="action-btn action-btn--success" (click)="decide(request, StatusAbsence.VALIDE)">Valider</button>
+                      <button class="action-btn action-btn--danger" (click)="decide(request, StatusAbsence.REFUSE)">Refuser</button>
+                    </div>
+                  } @else {
+                    <span class="actions__done">Traité</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>

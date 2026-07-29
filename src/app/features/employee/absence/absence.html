@@ -1,50 +1,96 @@
 <div class="employee-dashboard">
   <div class="page-header">
-    <h1 class="page-title">Mes absences</h1>
+    <div>
+      <h1 class="page-title">Mes absences</h1>
+      <p class="page-subtitle">Solde actuel : {{ balance | number:'1.0-2' }} jour(s)</p>
+    </div>
     <button class="btn btn--primary" (click)="openCreate()">
       <span>+ Nouvelle demande</span>
     </button>
   </div>
 
-  <div class="data-card">
-    <div class="data-card__header">
-      <h2 class="data-card__title">Historique de mes demandes</h2>
-      <span class="data-card__subtitle">{{ absences().length }} demande(s)</span>
+  <div class="summary-grid">
+    <div class="summary-card">
+      <span class="summary-card__label">Solde disponible</span>
+      <strong class="summary-card__value">{{ balance | number:'1.0-2' }}</strong>
     </div>
+    <div class="summary-card">
+      <span class="summary-card__label">Demandes</span>
+      <strong class="summary-card__value">{{ absences().length }}</strong>
+    </div>
+    <div class="summary-card">
+      <span class="summary-card__label">Dernière mise à jour</span>
+      <strong class="summary-card__value">{{ history().length ? history()[0].dateAction : '—' }}</strong>
+    </div>
+  </div>
 
-    @if (loading()) {
-      <div class="empty-state">Chargement...</div>
-    } @else if (absences().length === 0) {
-      <div class="empty-state">Aucune demande d'absence pour le moment</div>
-    } @else {
-      <div class="request-list">
-        @for (a of absences(); track a.idAbcance) {
-          <div class="request-item">
-            <div class="request-item__indicator" [class]="'request-item__indicator--' + statusColors[a.status!]"></div>
-            <div class="request-item__content">
-              <span class="request-item__type">{{ typeLabels[a.type] }}</span>
-              <span class="request-item__dates">{{ a.dateStart }} → {{ a.dateEnd }}</span>
-              @if (a.comment) {
-                <span class="request-item__dates">{{ a.comment }}</span>
+  <div class="content-grid">
+    <div class="data-card">
+      <div class="data-card__header">
+        <h2 class="data-card__title">Historique de mes demandes</h2>
+        <span class="data-card__subtitle">{{ absences().length }} demande(s)</span>
+      </div>
+
+      @if (loading()) {
+        <div class="empty-state">Chargement...</div>
+      } @else if (absences().length === 0) {
+        <div class="empty-state">Aucune demande d'absence pour le moment</div>
+      } @else {
+        <div class="request-list">
+          @for (a of absences(); track a.idAbcance) {
+            <div class="request-item">
+              <div class="request-item__indicator" [class]="'request-item__indicator--' + statusColors[a.status!]"></div>
+              <div class="request-item__content">
+                <span class="request-item__type">{{ typeLabels[a.type] }}</span>
+                <span class="request-item__dates">{{ a.dateStart }} → {{ a.dateEnd }}</span>
+                @if (a.comment) {
+                  <span class="request-item__dates">{{ a.comment }}</span>
+                }
+              </div>
+              <span class="request-item__status" [class]="'request-item__status--' + statusColors[a.status!]">
+                {{ statusLabels[a.status!] }}
+              </span>
+              @if (a.status === 'EN_ATTENTE') {
+                <div class="request-item__actions">
+                  <button class="icon-btn" (click)="openEdit(a)" title="Modifier">✎</button>
+                  <button class="icon-btn icon-btn--danger" (click)="askCancel(a)" title="Annuler">✕</button>
+                </div>
               }
             </div>
-            <span class="request-item__status" [class]="'request-item__status--' + statusColors[a.status!]">
-              {{ statusLabels[a.status!] }}
-            </span>
-            @if (a.status === 'EN_ATTENTE') {
-              <div class="request-item__actions">
-                <button class="icon-btn" (click)="openEdit(a)" title="Modifier">✎</button>
-                <button class="icon-btn icon-btn--danger" (click)="askCancel(a)" title="Annuler">✕</button>
-              </div>
-            }
-          </div>
-        }
+          }
+        </div>
+      }
+    </div>
+
+    <div class="data-card">
+      <div class="data-card__header">
+        <h2 class="data-card__title">Historique du solde</h2>
+        <span class="data-card__subtitle">{{ history().length }} mouvement(s)</span>
       </div>
-    }
+
+      @if (history().length === 0) {
+        <div class="empty-state">Aucun mouvement de solde pour le moment</div>
+      } @else {
+        <div class="history-list">
+          @for (item of history(); track item.idHistorySold) {
+            <div class="history-item">
+              <div class="history-item__content">
+                <span class="history-item__title">{{ item.motif }}</span>
+                <span class="history-item__meta">{{ item.dateAction }}</span>
+              </div>
+              <div class="history-item__balance">
+                <span>{{ item.soldeBefore | number:'1.0-2' }}</span>
+                <span>→</span>
+                <strong>{{ item.soldeAfter | number:'1.0-2' }}</strong>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
   </div>
 </div>
 
-<!-- Modal formulaire ajout / modification -->
 @if (showForm()) {
   <div class="form-overlay" (click)="closeForm()">
     <div class="form-box" (click)="$event.stopPropagation()">

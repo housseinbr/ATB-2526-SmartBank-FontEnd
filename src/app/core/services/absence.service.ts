@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Absence } from '../models/absence';
+import { Absence, HistorySold, StatusAbsence } from '../models/absence';
 import { environment } from '../../../environments/environment';
 import { AuthService } from './auth.service';
 
@@ -21,20 +21,39 @@ export class AbsenceApiService {
     return this.http.get<Absence[]>(this.baseUrl, { headers: this.authHeaders() });
   }
 
+  getMine(): Observable<Absence[]> {
+    return this.http.get<Absence[]>(`${this.baseUrl}/me`, { headers: this.authHeaders() });
+  }
+
+  getTeamAbsences(): Observable<Absence[]> {
+    return this.http.get<Absence[]>(`${this.baseUrl}/team`, { headers: this.authHeaders() });
+  }
+
+  getTeamPendingAbsences(): Observable<Absence[]> {
+    return this.http.get<Absence[]>(`${this.baseUrl}/team/pending`, { headers: this.authHeaders() });
+  }
+
+  getMineHistory(): Observable<HistorySold[]> {
+    return this.http.get<HistorySold[]>(`${this.baseUrl}/history/me`, { headers: this.authHeaders() });
+  }
+
   getById(id: number): Observable<Absence> {
     return this.http.get<Absence>(`${this.baseUrl}/${id}`, { headers: this.authHeaders() });
   }
 
-  create(absence: Absence): Observable<void> {
-    return this.http.post<void>(this.baseUrl, absence, { headers: this.authHeaders() });
+  create(absence: Absence): Observable<Absence> {
+    return this.http.post<Absence>(this.baseUrl, absence, { headers: this.authHeaders() });
   }
 
-  update(id: number, absence: Absence): Observable<void> {
-    return this.http.put<void>(`${this.baseUrl}/${id}`, absence, { headers: this.authHeaders() });
+  update(id: number, absence: Absence): Observable<Absence> {
+    return this.http.put<Absence>(`${this.baseUrl}/${id}`, absence, { headers: this.authHeaders() });
   }
 
-  // Annulation = suppression de la demande (uniquement si EN_ATTENTE)
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${id}`, { headers: this.authHeaders() });
+  }
+
+  decide(id: number, decision: StatusAbsence): Observable<Absence> {
+    return this.http.patch<Absence>(`${this.baseUrl}/${id}/decision/${decision}`, {}, { headers: this.authHeaders() });
   }
 }

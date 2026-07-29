@@ -56,6 +56,10 @@ export class UserService {
     return this.http.get<UserResponse[]>(`${this.baseUrl}/role/${role}`);
   }
 
+  getSubordonnes(idSuperviseur: number): Observable<UserResponse[]> {
+    return this.http.get<UserResponse[]>(`${this.baseUrl}/${idSuperviseur}/subordonnes`);
+  }
+
   createUser(user: Partial<UserResponse>): Observable<UserResponse> {
     return this.http.post<UserResponse>(this.baseUrl, user);
   }

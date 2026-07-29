@@ -1,12 +1,15 @@
-import { Component, signal } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { finalize } from 'rxjs';
 import { Toast, ToastType } from '../../../shared/components/toast/toast';
 import { AlertComponent } from '../../../shared/components/alert/alert';
 import { AbsenceApiService } from '../../../core/services/absence.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { UserService } from '../../../core/services/user.service';
 import {
   Absence,
+  HistorySold,
   StatusAbsence,
   TypeAbsence,
   DemiJournee,
@@ -15,6 +18,7 @@ import {
   STATUS_LABELS,
   STATUS_COLORS,
 } from '../../../core/models/absence';
+import { UserResponse } from '../../../core/models/user-response';
 
 @Component({
   selector: 'app-mes-absences',
@@ -23,22 +27,20 @@ import {
   templateUrl: './absence.html',
   styleUrl: './absence.css',
 })
-export class MesAbsences {
+export class MesAbsences implements OnInit {
   absences = signal<Absence[]>([]);
+  history = signal<HistorySold[]>([]);
+  currentUser = signal<UserResponse | null>(null);
   loading = signal(false);
 
-  // form modal
   showForm = signal(false);
   editingId = signal<number | null>(null);
+  showCancelAlert = signal(false);
+  pendingCancelId = signal<number | null>(null);
 
-  // toast
   toastVisible = signal(false);
   toastMessage = signal('');
   toastType = signal<ToastType>('success');
-
-  // alert (confirmation d'annulation)
-  showCancelAlert = signal(false);
-  pendingCancelId = signal<number | null>(null);
 
   typeOptions = Object.values(TypeAbsence);
   demiOptions = Object.values(DemiJournee);
@@ -49,10 +51,12 @@ export class MesAbsences {
 
   form: FormGroup;
 
-  constructor(private fb: FormBuilder, private api: AbsenceApiService, private authService: AuthService) {
-    // Le formulaire est construit ici (et pas en propriété de classe) car
-    // les initialiseurs de propriétés s'exécutent avant le corps du
-    // constructeur : "this.fb" ne serait pas encore assigné sinon.
+  constructor(
+    private fb: FormBuilder,
+    private api: AbsenceApiService,
+    private authService: AuthService,
+    private userService: UserService
+  ) {
     this.form = this.fb.group({
       type: [null as TypeAbsence | null, Validators.required],
       dateStart: ['', Validators.required],
@@ -60,41 +64,50 @@ export class MesAbsences {
       demiJournee: [null as DemiJournee | null],
       comment: [''],
     });
+  }
 
+  ngOnInit(): void {
     this.load();
   }
 
-  load() {
-    if (!this.authService.getToken()) {
-      this.loading.set(false);
+  load(): void {
+    const sessionUser = this.authService.currentUser();
+    if (!sessionUser?.id || !this.authService.getToken()) {
       this.notify('Session expirée ou absente, veuillez vous reconnecter', 'error');
       return;
     }
 
     this.loading.set(true);
-    this.api.getAll().subscribe({
-      next: (data) => {
-        this.absences.set(data);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.loading.set(false);
-        this.notify('Erreur lors du chargement des absences', 'error');
-      },
+    this.userService.getUserById(sessionUser.id).pipe(
+      finalize(() => this.loading.set(false))
+    ).subscribe({
+      next: (user) => this.currentUser.set(user),
+      error: () => this.notify('Impossible de charger votre solde', 'error'),
+    });
+
+    this.api.getMine().subscribe({
+      next: (data) => this.absences.set(data),
+      error: () => this.notify('Erreur lors du chargement des absences', 'error'),
+    });
+
+    this.api.getMineHistory().subscribe({
+      next: (data) => this.history.set(data),
+      error: () => this.notify("Erreur lors du chargement de l'historique", 'error'),
     });
   }
 
-  openCreate() {
+  openCreate(): void {
     this.editingId.set(null);
     this.form.reset({ type: null, dateStart: '', dateEnd: '', demiJournee: null, comment: '' });
     this.showForm.set(true);
   }
 
-  openEdit(absence: Absence) {
+  openEdit(absence: Absence): void {
     if (absence.status !== StatusAbsence.EN_ATTENTE) {
       this.notify('Seule une demande en attente peut être modifiée', 'error');
       return;
     }
+
     this.editingId.set(absence.idAbcance ?? null);
     this.form.reset({
       type: absence.type,
@@ -106,19 +119,19 @@ export class MesAbsences {
     this.showForm.set(true);
   }
 
-  closeForm() {
+  closeForm(): void {
     this.showForm.set(false);
   }
 
-  submitForm() {
+  submitForm(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
 
     const value = this.form.getRawValue();
-    const dateStart: string = value.dateStart ?? '';
-    const dateEnd: string = value.dateEnd ?? '';
+    const dateStart = value.dateStart ?? '';
+    const dateEnd = value.dateEnd ?? '';
 
     if (!dateStart || !dateEnd) {
       this.notify('Les dates de début et de fin sont obligatoires', 'error');
@@ -136,7 +149,6 @@ export class MesAbsences {
       dateEnd,
       demiJournee: value.demiJournee,
       comment: value.comment ?? '',
-      status: StatusAbsence.EN_ATTENTE,
     };
 
     const id = this.editingId();
@@ -148,23 +160,26 @@ export class MesAbsences {
         this.notify(id ? 'Demande modifiée avec succès' : 'Demande envoyée avec succès', 'success');
         this.load();
       },
-      error: () => this.notify("Une erreur est survenue, veuillez réessayer", 'error'),
+      error: () => this.notify('Une erreur est survenue, veuillez réessayer', 'error'),
     });
   }
 
-  askCancel(absence: Absence) {
+  askCancel(absence: Absence): void {
     if (absence.status !== StatusAbsence.EN_ATTENTE) {
       this.notify('Seule une demande en attente peut être annulée', 'error');
       return;
     }
+
     this.pendingCancelId.set(absence.idAbcance ?? null);
     this.showCancelAlert.set(true);
   }
 
-  confirmCancel() {
+  confirmCancel(): void {
     const id = this.pendingCancelId();
     this.showCancelAlert.set(false);
-    if (!id) return;
+    if (!id) {
+      return;
+    }
 
     this.api.delete(id).subscribe({
       next: () => {
@@ -175,12 +190,16 @@ export class MesAbsences {
     });
   }
 
-  cancelDialogClosed() {
+  cancelDialogClosed(): void {
     this.showCancelAlert.set(false);
     this.pendingCancelId.set(null);
   }
 
-  private notify(message: string, type: ToastType) {
+  get balance(): number {
+    return this.currentUser()?.solde ?? 22;
+  }
+
+  private notify(message: string, type: ToastType): void {
     this.toastMessage.set(message);
     this.toastType.set(type);
     this.toastVisible.set(true);
