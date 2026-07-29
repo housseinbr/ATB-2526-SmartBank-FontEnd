@@ -1,7 +1,9 @@
 .dashboard-layout {
   display: flex;
   min-height: 100vh;
-  background: #f8f9fa;
+  background:
+    radial-gradient(circle at top right, rgba(164, 24, 42, 0.05), transparent 30%),
+    var(--bg-page);
 }
 
 .dashboard-layout__sidebar {
@@ -36,6 +38,12 @@
 
 .dashboard-layout__content {
   flex: 1;
-  padding: 24px;
+  padding: 24px 28px 32px;
   overflow-x: hidden;
+}
+
+@media (max-width: 768px) {
+  .dashboard-layout__content {
+    padding: 18px 16px 24px;
+  }
 }

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Icon } from '../../../shared/components/icon/icon';
 
@@ -15,6 +15,7 @@ export class EmployeeDashboard {
     totalJours: 30,
     approuvees: 12,
     enAttente: 1,
+    refusees: 2,
     notifications: 2,
   };
 
@@ -44,4 +45,65 @@ export class EmployeeDashboard {
     { text: 'Votre solde de congés a été mis à jour (+2 jours)', time: 'Il y a 1j', unread: true },
     { text: 'Rappel : Entretien d évaluation le 20 Janvier 2025', time: 'Il y a 2j', unread: false },
   ];
+
+  statusChartData = computed(() => [
+    { label: 'Approuvées', value: this.stats.approuvees, color: '#16a34a' },
+    { label: 'En attente', value: this.stats.enAttente, color: '#d97706' },
+    { label: 'Refusées', value: this.stats.refusees, color: '#a4182a' },
+  ]);
+
+  get statusTotal(): number {
+    return this.statusChartData().reduce((total, item) => total + item.value, 0) || 1;
+  }
+
+  get lineChartWidth(): number {
+    return 640;
+  }
+
+  get lineChartHeight(): number {
+    return 220;
+  }
+
+  private chartPadding = { top: 20, right: 12, bottom: 36, left: 12 };
+
+  get lineChartMax(): number {
+    return Math.max(...this.absencesHistory.map((item) => item.value), 1);
+  }
+
+  get lineChartYGrid(): number[] {
+    return [0, 25, 50, 75, 100];
+  }
+
+  get linePath(): string {
+    const points = this.linePoints();
+    if (points.length === 0) return '';
+    return points.reduce((path, point, index) => `${path}${index === 0 ? 'M' : 'L'} ${point.x} ${point.y} `, '').trim();
+  }
+
+  get areaPath(): string {
+    const points = this.linePoints();
+    if (points.length === 0) return '';
+    const first = points[0];
+    const last = points[points.length - 1];
+    return `${this.linePath} L ${last.x} ${this.lineChartHeight - this.chartPadding.bottom} L ${first.x} ${this.lineChartHeight - this.chartPadding.bottom} Z`;
+  }
+
+  linePoints(): Array<{ x: number; y: number; month: string; value: number }> {
+    const chartWidth = this.lineChartWidth - this.chartPadding.left - this.chartPadding.right;
+    const chartHeight = this.lineChartHeight - this.chartPadding.top - this.chartPadding.bottom;
+    const step = this.absencesHistory.length > 1 ? chartWidth / (this.absencesHistory.length - 1) : 0;
+
+    return this.absencesHistory.map((item, index) => {
+      const x = this.chartPadding.left + index * step;
+      const y = this.chartPadding.top + chartHeight * (1 - item.value / this.lineChartMax);
+      return { x, y, month: item.month, value: item.value };
+    });
+  }
+
+  getPieOffset(index: number): number {
+    const cumulative = this.statusChartData()
+      .slice(0, index)
+      .reduce((total, item) => total + item.value, 0);
+    return 25 - (cumulative / this.statusTotal) * 100;
+  }
 }

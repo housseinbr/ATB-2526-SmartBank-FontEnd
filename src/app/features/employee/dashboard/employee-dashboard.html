@@ -35,12 +35,57 @@
     </div>
     <div class="kpi-card">
       <div class="kpi-card__icon kpi-card__icon--notif">
-        <app-icon name="bell" [size]="22" />
+        <app-icon name="x" [size]="22" />
       </div>
       <div class="kpi-card__content">
-        <span class="kpi-card__value">{{ stats.notifications }}</span>
-        <span class="kpi-card__label">Notifications</span>
-        <span class="kpi-card__sublabel">non lues</span>
+        <span class="kpi-card__value">{{ stats.refusees }}</span>
+        <span class="kpi-card__label">Refusées</span>
+        <span class="kpi-card__sublabel">cette année</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="charts-row">
+    <div class="chart-card">
+      <div class="chart-card__header">
+        <div>
+          <h3 class="chart-card__title">Répartition statuts</h3>
+          <span class="chart-card__subtitle">Mes demandes de l’année</span>
+        </div>
+      </div>
+      <div class="chart-card__body">
+        <div class="pie-chart">
+          <svg viewBox="0 0 36 36" class="pie-chart__svg">
+            <circle class="pie-chart__base" cx="18" cy="18" r="15.9155" />
+            @for (segment of statusChartData(); track segment.label; let i = $index) {
+              <circle
+                class="pie-chart__segment"
+                cx="18"
+                cy="18"
+                r="15.9155"
+                fill="none"
+                [attr.stroke]="segment.color"
+                stroke-width="3.25"
+                [attr.stroke-dasharray]="segment.value + ' ' + (statusTotal - segment.value)"
+                [attr.stroke-dashoffset]="getPieOffset(i)"
+              />
+            }
+          </svg>
+          <div class="pie-chart__center">
+            <span class="pie-chart__total">{{ stats.approuvees + stats.enAttente + stats.refusees }}</span>
+            <span class="pie-chart__label">Demandes</span>
+          </div>
+        </div>
+
+        <div class="chart-legend">
+          @for (item of statusChartData(); track item.label) {
+            <div class="legend-item">
+              <span class="legend-dot" [style.background]="item.color"></span>
+              <span class="legend-label">{{ item.label }}</span>
+              <span class="legend-value">{{ item.value }}</span>
+            </div>
+          }
+        </div>
       </div>
     </div>
   </div>
@@ -95,18 +140,46 @@
     <!-- Absences History -->
     <div class="data-card">
       <div class="data-card__header">
-        <h2 class="data-card__title">Historique des absences</h2>
-        <span class="data-card__subtitle">6 derniers mois</span>
+        <div>
+          <h2 class="data-card__title">Évolution des soldes</h2>
+          <span class="data-card__subtitle">6 derniers mois</span>
+        </div>
       </div>
-      <div class="chart-bars">
-        @for (item of absencesHistory; track item.month) {
-          <div class="bar-item">
-            <div class="bar-item__track">
-              <div class="bar-item__fill" [style.height.%]="(item.value / 12) * 100"></div>
-            </div>
-            <span class="bar-item__label">{{ item.month }}</span>
-          </div>
-        }
+      <div class="line-chart">
+        <svg class="line-chart__svg" [attr.viewBox]="'0 0 ' + lineChartWidth + ' ' + lineChartHeight" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="lineFill" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stop-color="#a4182a" stop-opacity="0.24" />
+              <stop offset="100%" stop-color="#a4182a" stop-opacity="0.02" />
+            </linearGradient>
+          </defs>
+
+          @for (tick of lineChartYGrid; track tick) {
+            <line
+              class="line-chart__grid"
+              [attr.x1]="0"
+              [attr.x2]="lineChartWidth"
+              [attr.y1]="(lineChartHeight - 36) * (1 - tick / 100) + 12"
+              [attr.y2]="(lineChartHeight - 36) * (1 - tick / 100) + 12"
+            />
+          }
+
+          <path [attr.d]="areaPath" fill="url(#lineFill)" />
+          <path class="line-chart__path" [attr.d]="linePath" />
+
+          @for (point of linePoints(); track point.month) {
+            <g>
+              <circle class="line-chart__point" [attr.cx]="point.x" [attr.cy]="point.y" r="3.5" />
+              <text class="line-chart__tooltip" [attr.x]="point.x" [attr.y]="point.y - 10">{{ point.value }}</text>
+            </g>
+          }
+        </svg>
+
+        <div class="line-chart__labels">
+          @for (point of linePoints(); track point.month) {
+            <span>{{ point.month }}</span>
+          }
+        </div>
       </div>
     </div>
   </div>

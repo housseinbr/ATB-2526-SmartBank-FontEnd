@@ -1,5 +1,22 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
+:root {
+  --bg-page: #f4f6fb;
+  --bg-surface: #ffffff;
+  --bg-surface-soft: #fafbfe;
+  --text-primary: #111827;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+  --brand: #a4182a;
+  --brand-strong: #c62539;
+  --brand-soft: rgba(164, 24, 42, 0.1);
+  --border-subtle: rgba(15, 23, 42, 0.08);
+  --shadow-soft: 0 10px 30px rgba(15, 23, 42, 0.05);
+  --shadow-strong: 0 24px 60px rgba(15, 23, 42, 0.14);
+  --radius-lg: 1rem;
+  --radius-md: 0.75rem;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -16,7 +33,10 @@ body {
     Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color: #171417;
+  color: var(--text-primary);
+  background:
+    radial-gradient(circle at top left, rgba(164, 24, 42, 0.06), transparent 24%),
+    linear-gradient(180deg, #ffffff 0%, var(--bg-page) 100%);
 }
 
 h1,
@@ -25,4 +45,15 @@ h3,
 h4,
 p {
   margin: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+a {
+  color: inherit;
 }

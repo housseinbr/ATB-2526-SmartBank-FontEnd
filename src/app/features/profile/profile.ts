@@ -19,6 +19,7 @@ import { Toast, ToastType } from '../../shared/components/toast/toast';
 export class Profile {
   private authService = inject(AuthService);
   private userService = inject(UserService);
+  readonly initialLeave = 22;
 
   user = signal<UserResponse | null>(null);
   loading = signal(false);
@@ -44,6 +45,9 @@ export class Profile {
   editForm = signal<Partial<UserResponse>>({});
 
   currentUser = computed(() => this.authService.currentUser());
+  leaveBalance = computed(() => this.user()?.solde ?? this.initialLeave);
+  leaveUsed = computed(() => Math.max(0, this.initialLeave - this.leaveBalance()));
+  leaveProgress = computed(() => Math.min(100, (this.leaveBalance() / this.initialLeave) * 100));
 
   get initials(): string {
     const u = this.user();
@@ -92,6 +96,27 @@ export class Profile {
     const s = this.user()?.superviseur;
     if (!s) return 'Aucun';
     return `${s.firstName} ${s.lastName}`;
+  }
+
+  get userIdLabel(): string {
+    return this.user()?.id ? `#${this.user()?.id}` : '—';
+  }
+
+  get cinLabel(): string {
+    return this.user()?.cin || '—';
+  }
+
+  get usernameLabel(): string {
+    return this.user()?.useName || '—';
+  }
+
+  get birthdayLabel(): string {
+    const birthday = this.user()?.birthday;
+    if (!birthday) return '—';
+    const date = new Date(birthday);
+    return Number.isNaN(date.getTime())
+      ? birthday
+      : new Intl.DateTimeFormat('fr-FR').format(date);
   }
 
   constructor() {

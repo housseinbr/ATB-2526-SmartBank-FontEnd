@@ -1,62 +1,112 @@
+<app-toast [message]="toastMessage()" [type]="toastType()" [visible]="toastVisible()" />
+
+<app-alert
+  [visible]="showCancelAlert()"
+  title="Annuler la demande"
+  message="Voulez-vous vraiment annuler cette demande d'absence ?"
+  type="warning"
+  confirmText="Oui, annuler"
+  cancelText="Non"
+  (confirmed)="confirmCancel()"
+  (cancelled)="cancelDialogClosed()"
+/>
+
 <div class="employee-dashboard">
-  <div class="page-header">
-    <div>
+  <section class="hero-card">
+    <div class="hero-card__content">
+      <p class="eyebrow">Espace absences</p>
       <h1 class="page-title">Mes absences</h1>
-      <p class="page-subtitle">Solde actuel : {{ balance | number:'1.0-2' }} jour(s)</p>
-    </div>
-    <button class="btn btn--primary" (click)="openCreate()">
-      <span>+ Nouvelle demande</span>
-    </button>
-  </div>
+      <p class="hero-card__subtitle">
+        Consultez votre solde, suivez vos demandes et créez une nouvelle absence en quelques clics.
+      </p>
 
-  <div class="summary-grid">
-    <div class="summary-card">
-      <span class="summary-card__label">Solde disponible</span>
-      <strong class="summary-card__value">{{ balance | number:'1.0-2' }}</strong>
+      <div class="hero-card__actions">
+        <button type="button" class="primary-btn" (click)="openCreate()">+ Nouvelle demande</button>
+        <span class="hero-card__meta">{{ currentUserLabel }} · {{ currentUser()?.role || 'Collaborateur' }}</span>
+      </div>
     </div>
-    <div class="summary-card">
-      <span class="summary-card__label">Demandes</span>
-      <strong class="summary-card__value">{{ absences().length }}</strong>
-    </div>
-    <div class="summary-card">
-      <span class="summary-card__label">Dernière mise à jour</span>
-      <strong class="summary-card__value">{{ history().length ? history()[0].dateAction : '—' }}</strong>
-    </div>
-  </div>
 
-  <div class="content-grid">
+    <div class="hero-card__balance">
+      <span class="hero-card__label">Solde actuel</span>
+      <strong class="hero-card__value">{{ balance | number:'1.0-2' }}</strong>
+      <span class="hero-card__hint">jour(s) disponible(s)</span>
+
+      <div class="balance-meter" aria-hidden="true">
+        <div class="balance-meter__bar">
+          <div class="balance-meter__fill" [style.width.%]="balanceProgress"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="summary-grid">
+    @for (card of summaryCards(); track card.label) {
+      <article [ngClass]="['summary-card', 'summary-card--' + card.tone]">
+        <span class="summary-card__label">{{ card.label }}</span>
+        <strong class="summary-card__value">{{ card.value }}</strong>
+        <span class="summary-card__hint">{{ card.hint }}</span>
+      </article>
+    }
+  </section>
+
+  <section class="content-grid">
     <div class="data-card">
       <div class="data-card__header">
-        <h2 class="data-card__title">Historique de mes demandes</h2>
-        <span class="data-card__subtitle">{{ absences().length }} demande(s)</span>
+        <div>
+          <h2 class="data-card__title">Historique de mes demandes</h2>
+          <span class="data-card__subtitle">{{ requestTimeline().length }} demande(s)</span>
+        </div>
       </div>
 
       @if (loading()) {
         <div class="empty-state">Chargement...</div>
-      } @else if (absences().length === 0) {
-        <div class="empty-state">Aucune demande d'absence pour le moment</div>
+      } @else if (requestTimeline().length === 0) {
+        <div class="empty-state empty-state--large">
+          <strong>Aucune demande pour le moment</strong>
+          <span>Créez votre première demande pour commencer le suivi.</span>
+        </div>
       } @else {
         <div class="request-list">
-          @for (a of absences(); track a.idAbcance) {
-            <div class="request-item">
-              <div class="request-item__indicator" [class]="'request-item__indicator--' + statusColors[a.status!]"></div>
-              <div class="request-item__content">
-                <span class="request-item__type">{{ typeLabels[a.type] }}</span>
-                <span class="request-item__dates">{{ a.dateStart }} → {{ a.dateEnd }}</span>
-                @if (a.comment) {
-                  <span class="request-item__dates">{{ a.comment }}</span>
-                }
-              </div>
-              <span class="request-item__status" [class]="'request-item__status--' + statusColors[a.status!]">
-                {{ statusLabels[a.status!] }}
-              </span>
-              @if (a.status === 'EN_ATTENTE') {
-                <div class="request-item__actions">
-                  <button class="icon-btn" (click)="openEdit(a)" title="Modifier">✎</button>
-                  <button class="icon-btn icon-btn--danger" (click)="askCancel(a)" title="Annuler">✕</button>
+          @for (absence of requestTimeline(); track absence.idAbcance) {
+            <article class="request-card">
+              <div [ngClass]="['request-card__accent', 'request-card__accent--' + statusTone(absence.status)]"></div>
+
+              <div class="request-card__body">
+                <div class="request-card__top">
+                  <div class="request-card__title-block">
+                    <h3 class="request-card__title">{{ typeLabels[absence.type] }}</h3>
+                    <p class="request-card__meta">
+                      {{ formatDate(absence.dateStart) }} → {{ formatDate(absence.dateEnd) }}
+                      · {{ duration(absence) }}
+                    </p>
+                  </div>
+
+                  <span [ngClass]="['status-badge', 'status-badge--' + statusTone(absence.status)]">
+                    {{ statusLabels[absence.status || StatusAbsence.EN_ATTENTE] }}
+                  </span>
                 </div>
-              }
-            </div>
+
+                @if (absence.comment) {
+                  <p class="request-card__comment">{{ absence.comment }}</p>
+                }
+
+                <div class="request-card__footer">
+                  <span class="request-card__chip">
+                    Demi-journée :
+                    <strong>{{ absence.demiJournee ? demiLabels[absence.demiJournee] : 'Aucune' }}</strong>
+                  </span>
+
+                  <div class="request-actions">
+                    @if (absence.status === StatusAbsence.EN_ATTENTE) {
+                      <button type="button" class="icon-btn" title="Modifier" (click)="openEdit(absence)">✎</button>
+                      <button type="button" class="icon-btn icon-btn--danger" title="Annuler" (click)="askCancel(absence)">✕</button>
+                    } @else {
+                      <span class="request-actions__done">Traitée</span>
+                    }
+                  </div>
+                </div>
+              </div>
+            </article>
           }
         </div>
       }
@@ -64,95 +114,130 @@
 
     <div class="data-card">
       <div class="data-card__header">
-        <h2 class="data-card__title">Historique du solde</h2>
-        <span class="data-card__subtitle">{{ history().length }} mouvement(s)</span>
+        <div>
+          <h2 class="data-card__title">Historique du solde</h2>
+          <span class="data-card__subtitle">{{ recentHistory().length }} mouvement(s)</span>
+        </div>
       </div>
 
-      @if (history().length === 0) {
-        <div class="empty-state">Aucun mouvement de solde pour le moment</div>
+      @if (recentHistory().length === 0) {
+        <div class="empty-state empty-state--large">
+          <strong>Aucun mouvement de solde</strong>
+          <span>Les mises à jour de solde apparaîtront ici.</span>
+        </div>
       } @else {
-        <div class="history-list">
-          @for (item of history(); track item.idHistorySold) {
-            <div class="history-item">
-              <div class="history-item__content">
-                <span class="history-item__title">{{ item.motif }}</span>
-                <span class="history-item__meta">{{ item.dateAction }}</span>
+        <div class="timeline-list">
+          @for (movement of recentHistory(); track movement.idHistorySold) {
+            <article class="timeline-item">
+              <div class="timeline-item__dot"></div>
+
+              <div class="timeline-item__body">
+                <div class="timeline-item__top">
+                  <div>
+                    <h3 class="timeline-item__title">{{ movement.motif }}</h3>
+                    <p class="timeline-item__meta">{{ formatDate(movement.dateAction) }}</p>
+                  </div>
+
+                  <span class="timeline-item__delta" [class.timeline-item__delta--positive]="movement.soldeAfter > movement.soldeBefore">
+                    {{ signedBalance(movement) }}
+                  </span>
+                </div>
+
+                <div class="timeline-item__values">
+                  <span>Avant : <strong>{{ movement.soldeBefore | number:'1.2-2' }}</strong></span>
+                  <span>Après : <strong>{{ movement.soldeAfter | number:'1.2-2' }}</strong></span>
+                </div>
               </div>
-              <div class="history-item__balance">
-                <span>{{ item.soldeBefore | number:'1.0-2' }}</span>
-                <span>→</span>
-                <strong>{{ item.soldeAfter | number:'1.0-2' }}</strong>
-              </div>
-            </div>
+            </article>
           }
         </div>
       }
     </div>
-  </div>
+  </section>
+
+  <section class="data-card">
+    <div class="data-card__header">
+      <div>
+        <h2 class="data-card__title">Récapitulatif rapide</h2>
+        <span class="data-card__subtitle">Dernières demandes enregistrées</span>
+      </div>
+    </div>
+
+    @if (requestTimeline().length === 0) {
+      <div class="empty-state empty-state--compact">Votre tableau est vide pour le moment.</div>
+    } @else {
+      <div class="mini-grid">
+        @for (absence of requestTimeline().slice(0, 4); track absence.idAbcance) {
+          <div class="mini-card">
+            <div class="mini-card__left">
+              <span class="mini-card__title">{{ typeLabels[absence.type] }}</span>
+              <span class="mini-card__meta">{{ formatDate(absence.dateStart) }} → {{ formatDate(absence.dateEnd) }}</span>
+            </div>
+            <span [ngClass]="['status-badge', 'status-badge--' + statusTone(absence.status)]">
+              {{ statusLabels[absence.status || StatusAbsence.EN_ATTENTE] }}
+            </span>
+          </div>
+        }
+      </div>
+    }
+  </section>
 </div>
 
 @if (showForm()) {
   <div class="form-overlay" (click)="closeForm()">
     <div class="form-box" (click)="$event.stopPropagation()">
-      <h3 class="alert__title">{{ editingId() ? 'Modifier la demande' : 'Nouvelle demande d\'absence' }}</h3>
+      <div class="data-card__header form-box__header">
+        <div>
+          <h2 class="data-card__title">{{ editingId() ? 'Modifier la demande' : 'Nouvelle demande' }}</h2>
+          <span class="data-card__subtitle">Remplissez les informations de votre absence</span>
+        </div>
+      </div>
 
-      <form [formGroup]="form" (ngSubmit)="submitForm()" class="absence-form">
-        <div class="form-group">
-          <label>Type d'absence</label>
-          <select formControlName="type">
-            <option [ngValue]="null">Sélectionner...</option>
-            @for (t of typeOptions; track t) {
-              <option [ngValue]="t">{{ typeLabels[t] }}</option>
-            }
-          </select>
+      <form class="absence-form" [formGroup]="form" (ngSubmit)="submitForm()">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="type">Type d'absence</label>
+            <select id="type" formControlName="type">
+              <option [ngValue]="null">Sélectionner</option>
+              @for (type of typeOptions; track type) {
+                <option [ngValue]="type">{{ typeLabels[type] }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="demiJournee">Demi-journée</label>
+            <select id="demiJournee" formControlName="demiJournee">
+              <option [ngValue]="null">Aucune</option>
+              @for (option of demiOptions; track option) {
+                <option [ngValue]="option">{{ demiLabels[option] }}</option>
+              }
+            </select>
+          </div>
         </div>
 
         <div class="form-row">
           <div class="form-group">
-            <label>Date de début</label>
-            <input type="date" formControlName="dateStart" />
+            <label for="dateStart">Date de début</label>
+            <input id="dateStart" type="date" formControlName="dateStart" />
           </div>
+
           <div class="form-group">
-            <label>Date de fin</label>
-            <input type="date" formControlName="dateEnd" />
+            <label for="dateEnd">Date de fin</label>
+            <input id="dateEnd" type="date" formControlName="dateEnd" />
           </div>
         </div>
 
         <div class="form-group">
-          <label>Demi-journée (optionnel)</label>
-          <select formControlName="demiJournee">
-            <option [ngValue]="null">Journée(s) complète(s)</option>
-            @for (d of demiOptions; track d) {
-              <option [ngValue]="d">{{ demiLabels[d] }}</option>
-            }
-          </select>
+          <label for="comment">Commentaire</label>
+          <textarea id="comment" rows="4" formControlName="comment" placeholder="Ajoutez une précision si besoin"></textarea>
         </div>
 
-        <div class="form-group">
-          <label>Commentaire</label>
-          <textarea formControlName="comment" rows="3" placeholder="Motif ou précision..."></textarea>
-        </div>
-
-        <div class="alert__actions">
-          <button type="button" class="alert__btn alert__btn--cancel" (click)="closeForm()">Annuler</button>
-          <button type="submit" class="alert__btn alert__btn--confirm">
-            {{ editingId() ? 'Enregistrer' : 'Envoyer la demande' }}
-          </button>
+        <div class="form-actions">
+          <button type="button" class="secondary-btn" (click)="closeForm()">Annuler</button>
+          <button type="submit" class="primary-btn">Enregistrer</button>
         </div>
       </form>
     </div>
   </div>
 }
-
-<app-alert
-  [visible]="showCancelAlert()"
-  title="Annuler la demande ?"
-  message="Cette action est irréversible. Voulez-vous vraiment annuler cette demande d'absence ?"
-  type="danger"
-  confirmText="Oui, annuler"
-  cancelText="Retour"
-  (confirmed)="confirmCancel()"
-  (cancelled)="cancelDialogClosed()"
-/>
-
-<app-toast [message]="toastMessage()" [type]="toastType()" [visible]="toastVisible()" />

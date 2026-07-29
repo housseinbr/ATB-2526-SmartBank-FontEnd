@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
@@ -28,6 +28,10 @@ import { UserResponse } from '../../../core/models/user-response';
   styleUrl: './absence.css',
 })
 export class MesAbsences implements OnInit {
+  readonly StatusAbsence = StatusAbsence;
+  readonly TypeAbsence = TypeAbsence;
+  readonly DemiJournee = DemiJournee;
+
   absences = signal<Absence[]>([]);
   history = signal<HistorySold[]>([]);
   currentUser = signal<UserResponse | null>(null);
@@ -48,6 +52,41 @@ export class MesAbsences implements OnInit {
   demiLabels = DEMI_JOURNEE_LABELS;
   statusLabels = STATUS_LABELS;
   statusColors = STATUS_COLORS;
+
+  summaryCards = computed(() => [
+    {
+      label: 'Solde disponible',
+      value: this.balance.toFixed(2),
+      hint: 'jours restants',
+      tone: 'blue',
+    },
+    {
+      label: 'Demandes totales',
+      value: String(this.absences().length),
+      hint: 'historique personnel',
+      tone: 'slate',
+    },
+    {
+      label: 'En attente',
+      value: String(this.absences().filter((absence) => absence.status === StatusAbsence.EN_ATTENTE).length),
+      hint: 'à traiter',
+      tone: 'amber',
+    },
+    {
+      label: 'Validées',
+      value: String(this.absences().filter((absence) => absence.status === StatusAbsence.VALIDE).length),
+      hint: 'approuvées',
+      tone: 'green',
+    },
+  ]);
+
+  requestTimeline = computed(() =>
+    [...this.absences()].sort((left, right) => right.dateStart.localeCompare(left.dateStart))
+  );
+
+  recentHistory = computed(() =>
+    [...this.history()].sort((left, right) => right.dateAction.localeCompare(left.dateAction))
+  );
 
   form: FormGroup;
 
@@ -197,6 +236,63 @@ export class MesAbsences implements OnInit {
 
   get balance(): number {
     return this.currentUser()?.solde ?? 22;
+  }
+
+  get balanceProgress(): number {
+    return Math.min(100, Math.max(0, (this.balance / 22) * 100));
+  }
+
+  get currentUserLabel(): string {
+    const current = this.currentUser();
+    if (!current) return 'Collaborateur';
+    return `${current.firstName ?? ''} ${current.lastName ?? ''}`.trim() || 'Collaborateur';
+  }
+
+  formatDate(dateValue?: string | null): string {
+    if (!dateValue) {
+      return '—';
+    }
+
+    const date = new Date(dateValue);
+    if (Number.isNaN(date.getTime())) {
+      return dateValue;
+    }
+
+    return new Intl.DateTimeFormat('fr-FR', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    }).format(date);
+  }
+
+  duration(absence: Absence): string {
+    const start = new Date(absence.dateStart);
+    const end = new Date(absence.dateEnd);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+      return '—';
+    }
+
+    const diffInDays = Math.max(1, Math.round((end.getTime() - start.getTime()) / 86400000) + 1);
+    return diffInDays === 1 ? '1 jour' : `${diffInDays} jours`;
+  }
+
+  signedBalance(movement: HistorySold): string {
+    const delta = movement.soldeAfter - movement.soldeBefore;
+    const prefix = delta > 0 ? '+' : '';
+    return `${prefix}${delta.toFixed(2)} j`;
+  }
+
+  statusTone(status?: StatusAbsence): 'green' | 'amber' | 'red' | 'slate' {
+    switch (status) {
+      case StatusAbsence.VALIDE:
+        return 'green';
+      case StatusAbsence.EN_ATTENTE:
+        return 'amber';
+      case StatusAbsence.REFUSE:
+        return 'red';
+      default:
+        return 'slate';
+    }
   }
 
   private notify(message: string, type: ToastType): void {

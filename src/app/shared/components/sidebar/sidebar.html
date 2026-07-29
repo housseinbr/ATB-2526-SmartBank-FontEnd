@@ -19,7 +19,7 @@
 
   <nav class="sidebar__nav">
     @for (item of config[role()].items; track item.route) {
-      <a class="sidebar__link" [routerLink]="item.route">
+      <a class="sidebar__link" [routerLink]="item.route" routerLinkActive="sidebar__link--active">
         <app-icon class="sidebar__link-icon" [name]="$any(item.icon)" [size]="18" />
         <span class="sidebar__link-label">{{ item.label }}</span>
         @if (badgeFor(item); as count) {
