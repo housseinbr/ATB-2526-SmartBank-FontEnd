@@ -12,8 +12,11 @@ import { Toast } from '../../../shared/components/toast/toast';
 import { AlertComponent } from '../../../shared/components/alert/alert';
 import { Router } from '@angular/router';
 import { UserService } from '../../../core/services/user.service';
+import { ProfileDataService } from '../../../core/services/profile-data.service';
 import { UserResponse } from '../../../core/models/user-response';
 import { Role } from '../../../core/models/role';
+import { UserProfileData } from '../../../core/models/profile-data';
+import { environment } from '../../../../environments/environment';
 import { finalize } from 'rxjs';
 
 @Component({
@@ -25,6 +28,7 @@ import { finalize } from 'rxjs';
 })
 export class AdminDashboard implements OnInit {
   private userService = inject(UserService);
+  private profileDataService = inject(ProfileDataService);
   private router = inject(Router);
   private fb = inject(FormBuilder);
 
@@ -488,5 +492,222 @@ private doAssignSupervisor(user: UserResponse, sup: UserResponse | null) {
   getAvatarColor(user: UserResponse): string {
     const colors = ['#a4182a', '#2563eb', '#9333ea', '#16a34a', '#d97706', '#0891b2'];
     return colors[user.id % colors.length];
+  }
+
+  exportUsersExcel(): void {
+    const headers = [
+      'ID',
+      'CIN',
+      'Nom',
+      'Prénom',
+      'Username',
+      'Email',
+      'Téléphone',
+      'Date naissance',
+      'Rôle',
+      'Solde',
+      'Salaire',
+      'Superviseur',
+      'Statut',
+    ];
+
+    const rows = this.filteredUsers().map((user) => [
+      user.id,
+      user.cin,
+      user.lastName,
+      user.firstName,
+      user.useName,
+      user.email,
+      user.numTel,
+      this.formatDate(user.birthday),
+      user.role,
+      user.solde,
+      user.salaire,
+      user.superviseur ? `${user.superviseur.firstName} ${user.superviseur.lastName}` : '',
+      user.actif,
+    ]);
+
+    const html = `
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <style>
+            body { font-family: Arial, sans-serif; padding: 24px; color: #1f2937; }
+            h1 { color: #a4182a; margin: 0 0 8px; }
+            p { margin: 0 0 20px; color: #6b7280; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { border: 1px solid #d1d5db; padding: 10px 12px; text-align: left; font-size: 12px; }
+            th { background: #f8fafc; color: #111827; }
+          </style>
+        </head>
+        <body>
+          <h1>Export des utilisateurs</h1>
+          <p>Généré le ${new Date().toLocaleString('fr-FR')}</p>
+          <table>
+            <thead>
+              <tr>${headers.map((header) => `<th>${header}</th>`).join('')}</tr>
+            </thead>
+            <tbody>
+              ${rows.map((row) => `<tr>${row.map((cell) => `<td>${cell ?? ''}</td>`).join('')}</tr>`).join('')}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `;
+
+    const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    this.downloadFile(url, `utilisateurs_${this.fileStamp()}.xls`);
+  }
+
+  exportUserProfilePdf(user: UserResponse): void {
+    this.profileDataService.getProfileData(user.id).subscribe({
+      next: (profile) => this.openProfilePrintWindow(user, profile),
+      error: () => this.showToast('Impossible de charger le profil pour l’export PDF.', 'error'),
+    });
+  }
+
+  private openProfilePrintWindow(user: UserResponse, profile: UserProfileData): void {
+    const sections = [
+      this.buildProfileSection('Adresse', profile.addresses.map((item) => ({
+        label: `${item.country ?? '—'} / ${item.ville ?? '—'} / ${item.government ?? '—'}`,
+        meta: 'Justificatif',
+        image: this.documentUrl(item.documentLink),
+      }))),
+      this.buildProfileSection('Compte bancaire', profile.bankAccount ? [{
+        label: `${profile.bankAccount.bankTitle ?? '—'} · ${profile.bankAccount.compte ?? '—'}`,
+        meta: `${profile.bankAccount.nameBenifice ?? '—'} · ${profile.bankAccount.ville ?? '—'}`,
+        image: this.documentUrl(profile.bankAccount.documentLink),
+      }] : []),
+      this.buildProfileSection('Situation familiale', profile.familySituation ? [{
+        label: profile.familySituation.situation ?? '—',
+        meta: profile.familySituation.documentUpload ?? 'Document',
+        image: this.documentUrl(profile.familySituation.documentLink),
+      }] : []),
+      this.buildProfileSection('Données administratives', profile.administrativeData.map((item) => ({
+        label: `${item.situationEmploye ?? '—'} · ${item.classification ?? '—'}`,
+        meta: `${item.qualification ?? '—'} · ${this.formatDate(item.dateInscrit || '')}`,
+        image: this.documentUrl(item.documentLink),
+      }))),
+      this.buildProfileSection('Personnes à charge', profile.dependents.map((item) => ({
+        label: `${item.name ?? '—'} ${item.lastName ?? ''}`.trim(),
+        meta: `${item.relation ?? '—'} · ${item.numTel ?? '—'}`,
+      }))),
+      this.buildProfileSection('Contacts urgents', profile.urgentContacts.map((item) => ({
+        label: `${item.name ?? '—'} ${item.lastName ?? ''}`.trim(),
+        meta: `${item.relation ?? '—'} · ${item.numTel ?? '—'}`,
+      }))),
+    ].join('');
+
+    const popup = window.open('', '_blank', 'width=1200,height=900');
+    if (!popup) {
+      this.showToast('Impossible d’ouvrir la fenêtre PDF.', 'error');
+      return;
+    }
+
+    popup.document.write(`
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>Profil - ${user.firstName} ${user.lastName}</title>
+          <style>
+            * { box-sizing: border-box; }
+            body { font-family: Arial, sans-serif; margin: 0; padding: 28px; color: #111827; background: #f8fafc; }
+            .page { max-width: 1100px; margin: 0 auto; background: #fff; border-radius: 20px; padding: 28px; box-shadow: 0 10px 35px rgba(15, 23, 42, 0.08); }
+            .hero { display: flex; justify-content: space-between; gap: 20px; align-items: center; border-bottom: 1px solid #e5e7eb; padding-bottom: 18px; margin-bottom: 24px; }
+            .hero h1 { margin: 0; color: #a4182a; font-size: 28px; }
+            .hero .meta { color: #6b7280; margin-top: 6px; }
+            .badge { display: inline-block; margin-top: 10px; padding: 6px 12px; border-radius: 999px; background: #fce7f3; color: #a4182a; font-weight: 700; font-size: 12px; }
+            .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+            .section { border: 1px solid #e5e7eb; border-radius: 16px; overflow: hidden; }
+            .section__head { padding: 14px 16px; background: linear-gradient(135deg, #fff7f8, #ffffff); border-bottom: 1px solid #e5e7eb; }
+            .section__head h2 { margin: 0; font-size: 16px; color: #111827; }
+            .section__body { padding: 14px 16px; display: grid; gap: 12px; }
+            .item { padding: 12px; border-radius: 12px; background: #f8fafc; border: 1px solid #eef2f7; }
+            .item h3 { margin: 0 0 4px; font-size: 14px; }
+            .item .meta { color: #6b7280; font-size: 12px; margin-bottom: 10px; }
+            .item img { width: 100%; max-height: 260px; object-fit: contain; border-radius: 10px; background: #fff; border: 1px solid #e5e7eb; }
+            .full { grid-column: 1 / -1; }
+            @media print { body { background: #fff; padding: 0; } .page { box-shadow: none; border-radius: 0; } }
+          </style>
+        </head>
+        <body>
+          <div class="page">
+            <div class="hero">
+              <div>
+                <h1>${user.firstName} ${user.lastName}</h1>
+                <div class="meta">${user.useName} · ${user.email} · ${user.role}</div>
+                <div class="badge">Profil complet utilisateur</div>
+              </div>
+              <div style="text-align:right">
+                <div><strong>CIN:</strong> ${user.cin}</div>
+                <div><strong>Téléphone:</strong> ${user.numTel}</div>
+                <div><strong>Statut:</strong> ${user.actif}</div>
+              </div>
+            </div>
+            <div class="grid">
+              ${this.buildProfileStatCard('Solde', `${user.solde} j`)}
+              ${this.buildProfileStatCard('Salaire', `${user.salaire.toLocaleString('fr-FR')} DT`)}
+              ${this.buildProfileStatCard('Superviseur', user.superviseur ? `${user.superviseur.firstName} ${user.superviseur.lastName}` : 'Aucun')}
+              ${this.buildProfileStatCard('Naissance', this.formatDate(user.birthday))}
+              <div class="full">${sections}</div>
+            </div>
+          </div>
+          <script>window.onload = () => { window.focus(); window.print(); };</script>
+        </body>
+      </html>
+    `);
+    popup.document.close();
+  }
+
+  private buildProfileSection(title: string, items: Array<{ label: string; meta?: string; image?: string | null }>): string {
+    if (!items.length) {
+      return '';
+    }
+    return `
+      <section class="section">
+        <div class="section__head"><h2>${title}</h2></div>
+        <div class="section__body">
+          ${items.map((item) => `
+            <div class="item">
+              <h3>${item.label}</h3>
+              ${item.meta ? `<div class="meta">${item.meta}</div>` : ''}
+              ${item.image ? `<img src="${item.image}" alt="${title}" />` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </section>
+    `;
+  }
+
+  private buildProfileStatCard(title: string, value: string): string {
+    return `
+      <div class="item">
+        <h3>${title}</h3>
+        <div class="meta" style="font-size: 16px; color: #111827; font-weight: 700;">${value}</div>
+      </div>
+    `;
+  }
+
+  private documentUrl(pathValue?: string | null): string | null {
+    if (!pathValue) return null;
+    return `${environment.apiUrl}/documents/${encodeURIComponent(this.documentFileName(pathValue))}`;
+  }
+
+  private fileStamp(): string {
+    return new Date().toISOString().replace(/[:.]/g, '-');
+  }
+
+  private documentFileName(pathValue: string): string {
+    const normalized = pathValue.replace(/\\/g, '/');
+    return normalized.split('/').pop() || pathValue;
+  }
+
+  private downloadFile(url: string, fileName: string): void {
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = fileName;
+    anchor.click();
+    URL.revokeObjectURL(url);
   }
 }
