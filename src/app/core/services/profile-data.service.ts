@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { AuthService } from './auth.service';
 import {
   AddressData,
   AdministrativeData,
@@ -15,10 +16,15 @@ import {
 @Injectable({ providedIn: 'root' })
 export class ProfileDataService {
   private http = inject(HttpClient);
+  private authService = inject(AuthService);
   private baseUrl = `${environment.apiUrl}/users`;
 
   getProfileData(userId: number): Observable<UserProfileData> {
     return this.http.get<UserProfileData>(`${this.baseUrl}/${userId}/profile-data`);
+  }
+
+  getDocumentBlob(fileName: string): Observable<Blob> {
+    return this.http.get(`${environment.apiUrl}/documents/${encodeURIComponent(fileName)}`, { responseType: 'blob' });
   }
 
   saveAddress(userId: number, data: AddressData): Observable<AddressData> {
@@ -44,11 +50,15 @@ export class ProfileDataService {
     if (documentImage) {
       formData.append('documentImage', documentImage);
     }
-    return this.http.post<BankAccountData>(`${this.baseUrl}/${userId}/profile-data/bank-account/upload`, formData);
+    return this.http.post<BankAccountData>(`${this.baseUrl}/${userId}/profile-data/bank-account/upload`, formData, {
+      headers: this.authHeaders(),
+    });
   }
 
   deleteBankAccount(userId: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${userId}/profile-data/bank-account`);
+    return this.http.delete<void>(`${this.baseUrl}/${userId}/profile-data/bank-account`, {
+      headers: this.authHeaders(),
+    });
   }
 
   saveFamilySituation(userId: number, data: FamilySituationData, documentImage?: File | null): Observable<FamilySituationData> {
@@ -59,11 +69,15 @@ export class ProfileDataService {
     if (documentImage) {
       formData.append('documentImage', documentImage);
     }
-    return this.http.post<FamilySituationData>(`${this.baseUrl}/${userId}/profile-data/family-situation/upload`, formData);
+    return this.http.post<FamilySituationData>(`${this.baseUrl}/${userId}/profile-data/family-situation/upload`, formData, {
+      headers: this.authHeaders(),
+    });
   }
 
   deleteFamilySituation(userId: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${userId}/profile-data/family-situation`);
+    return this.http.delete<void>(`${this.baseUrl}/${userId}/profile-data/family-situation`, {
+      headers: this.authHeaders(),
+    });
   }
 
   saveAdministrativeData(userId: number, data: AdministrativeData, documentImage?: File | null): Observable<AdministrativeData> {
@@ -77,33 +91,54 @@ export class ProfileDataService {
     if (documentImage) {
       formData.append('documentImage', documentImage);
     }
-    return this.http.post<AdministrativeData>(`${this.baseUrl}/${userId}/profile-data/administrative-data/upload`, formData);
+    return this.http.post<AdministrativeData>(`${this.baseUrl}/${userId}/profile-data/administrative-data/upload`, formData, {
+      headers: this.authHeaders(),
+    });
   }
 
   deleteAdministrativeData(userId: number, idAd: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${userId}/profile-data/administrative-data/${idAd}`);
+    return this.http.delete<void>(`${this.baseUrl}/${userId}/profile-data/administrative-data/${idAd}`, {
+      headers: this.authHeaders(),
+    });
   }
 
   saveDependent(userId: number, data: PersonChargeData): Observable<PersonChargeData> {
     if (data.idPerson) {
-      return this.http.put<PersonChargeData>(`${this.baseUrl}/${userId}/profile-data/dependents/${data.idPerson}`, data);
+      return this.http.put<PersonChargeData>(`${this.baseUrl}/${userId}/profile-data/dependents/${data.idPerson}`, data, {
+        headers: this.authHeaders(),
+      });
     }
-    return this.http.post<PersonChargeData>(`${this.baseUrl}/${userId}/profile-data/dependents`, data);
+    return this.http.post<PersonChargeData>(`${this.baseUrl}/${userId}/profile-data/dependents`, data, {
+      headers: this.authHeaders(),
+    });
   }
 
   deleteDependent(userId: number, idPerson: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${userId}/profile-data/dependents/${idPerson}`);
+    return this.http.delete<void>(`${this.baseUrl}/${userId}/profile-data/dependents/${idPerson}`, {
+      headers: this.authHeaders(),
+    });
   }
 
   saveUrgentContact(userId: number, data: PersonUrgentData): Observable<PersonUrgentData> {
     if (data.idPerson) {
-      return this.http.put<PersonUrgentData>(`${this.baseUrl}/${userId}/profile-data/urgent-contacts/${data.idPerson}`, data);
+      return this.http.put<PersonUrgentData>(`${this.baseUrl}/${userId}/profile-data/urgent-contacts/${data.idPerson}`, data, {
+        headers: this.authHeaders(),
+      });
     }
-    return this.http.post<PersonUrgentData>(`${this.baseUrl}/${userId}/profile-data/urgent-contacts`, data);
+    return this.http.post<PersonUrgentData>(`${this.baseUrl}/${userId}/profile-data/urgent-contacts`, data, {
+      headers: this.authHeaders(),
+    });
   }
 
   deleteUrgentContact(userId: number, idPerson: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${userId}/profile-data/urgent-contacts/${idPerson}`);
+    return this.http.delete<void>(`${this.baseUrl}/${userId}/profile-data/urgent-contacts/${idPerson}`, {
+      headers: this.authHeaders(),
+    });
+  }
+
+  private authHeaders(): HttpHeaders {
+    const token = this.authService.getToken();
+    return token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : new HttpHeaders();
   }
 
   private appendField(formData: FormData, key: string, value: unknown) {

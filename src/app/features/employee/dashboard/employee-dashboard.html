@@ -173,45 +173,5 @@
     </div>
   </div>
 
-  <div class="data-card">
-    <div class="data-card__header">
-      <h2 class="data-card__title">Demandes récentes</h2>
-      <button class="btn btn--primary">
-        <app-icon name="user-plus" [size]="14" />
-        <span>Nouvelle demande</span>
-      </button>
-    </div>
-    <div class="request-list">
-      @for (req of recentRequests(); track req.ref) {
-        <div class="request-item">
-          <div class="request-item__indicator" [class]="'request-item__indicator--' + req.statusColor"></div>
-          <div class="request-item__content">
-            <span class="request-item__type">{{ req.type }}</span>
-            <span class="request-item__dates">{{ req.dates }} · {{ req.days }} jours</span>
-          </div>
-          <span class="request-item__status" [class]="'request-item__status--' + req.statusColor">{{ req.status }}</span>
-          <span class="request-item__ref">{{ req.ref }}</span>
-        </div>
-      }
-    </div>
-  </div>
-
-  <div class="data-card">
-    <div class="data-card__header">
-      <h2 class="data-card__title">Notifications récentes</h2>
-      <a class="data-card__link">Toutes voir</a>
-    </div>
-    <div class="notification-list">
-      @for (notif of recentNotifications(); track notif.id) {
-        <div class="notification-item" [class.notification-item--unread]="!notif.read">
-          <div class="notification-item__dot" [class.notification-item__dot--unread]="!notif.read"></div>
-          <div class="notification-item__content">
-            <p class="notification-item__text">{{ notif.subject }}</p>
-            <span class="notification-item__time">{{ notif.text }}</span>
-            <span class="notification-item__time">{{ notif.date | date:'dd MMM yyyy' }}</span>
-          </div>
-        </div>
-      }
-    </div>
-  </div>
+  
 </div>

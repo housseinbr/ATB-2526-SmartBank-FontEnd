@@ -105,15 +105,20 @@
           </div>
           <div class="section-card__body">
             @if (data()?.bankAccount) {
-              <div class="details-grid">
-                <div><span>Bénéficiaire</span><strong>{{ data()?.bankAccount?.nameBenifice || '—' }}</strong></div>
-                <div><span>Banque</span><strong>{{ data()?.bankAccount?.bankTitle || '—' }}</strong></div>
-                <div><span>Ville</span><strong>{{ data()?.bankAccount?.ville || '—' }}</strong></div>
-                <div><span>Compte</span><strong>{{ data()?.bankAccount?.compte || '—' }}</strong></div>
-                <div><span>Clé</span><strong>{{ data()?.bankAccount?.controlleChiffre ?? '—' }}</strong></div>
-                <div><span>Pays</span><strong>{{ data()?.bankAccount?.contry || '—' }}</strong></div>
-                <div class="details-grid__full"><span>Document</span><strong>{{ documentName(data()?.bankAccount?.documentLink) }}</strong></div>
-              </div>
+                <div class="details-grid">
+                  <div><span>Bénéficiaire</span><strong>{{ data()?.bankAccount?.nameBenifice || '—' }}</strong></div>
+                  <div><span>Banque</span><strong>{{ data()?.bankAccount?.bankTitle || '—' }}</strong></div>
+                  <div><span>Ville</span><strong>{{ data()?.bankAccount?.ville || '—' }}</strong></div>
+                  <div><span>Compte</span><strong>{{ data()?.bankAccount?.compte || '—' }}</strong></div>
+                  <div><span>Clé</span><strong>{{ data()?.bankAccount?.controlleChiffre ?? '—' }}</strong></div>
+                  <div><span>Pays</span><strong>{{ data()?.bankAccount?.contry || '—' }}</strong></div>
+                  <div class="details-grid__full"><span>Document</span><strong>{{ documentName(data()?.bankAccount?.documentLink) }}</strong></div>
+                  @if (documentPreviewUrl(data()?.bankAccount?.documentLink)) {
+                    <div class="details-grid__full document-preview">
+                      <img [src]="documentPreviewUrl(data()?.bankAccount?.documentLink)!" alt="Document bancaire" />
+                    </div>
+                  }
+                </div>
             } @else {
               <div class="empty-state">Aucun compte bancaire enregistré.</div>
             }
@@ -132,11 +137,16 @@
           </div>
           <div class="section-card__body">
             @if (data()?.familySituation) {
-              <div class="details-grid">
-                <div><span>Situation</span><strong>{{ data()?.familySituation?.situation || '—' }}</strong></div>
-                <div><span>Document</span><strong>{{ data()?.familySituation?.documentUpload || '—' }}</strong></div>
-                <div class="details-grid__full"><span>Image</span><strong>{{ documentName(data()?.familySituation?.documentLink) }}</strong></div>
-              </div>
+                <div class="details-grid">
+                  <div><span>Situation</span><strong>{{ data()?.familySituation?.situation || '—' }}</strong></div>
+                  <div><span>Document</span><strong>{{ data()?.familySituation?.documentUpload || '—' }}</strong></div>
+                  <div class="details-grid__full"><span>Image</span><strong>{{ documentName(data()?.familySituation?.documentLink) }}</strong></div>
+                  @if (documentPreviewUrl(data()?.familySituation?.documentLink)) {
+                    <div class="details-grid__full document-preview">
+                      <img [src]="documentPreviewUrl(data()?.familySituation?.documentLink)!" alt="Document familial" />
+                    </div>
+                  }
+                </div>
             } @else {
               <div class="empty-state">Aucune situation familiale enregistrée.</div>
             }
@@ -160,6 +170,11 @@
                   <div>
                     <strong>{{ item.situationEmploye || '—' }} · {{ item.classification || '—' }}</strong>
                     <p>{{ item.cathegorieSituation || '—' }} · {{ item.qualification || '—' }} · {{ formatDate(item.dateInscrit) }} · {{ documentName(item.documentLink) }}</p>
+                    @if (documentPreviewUrl(item.documentLink)) {
+                      <div class="document-preview document-preview--inline">
+                        <img [src]="documentPreviewUrl(item.documentLink)!" alt="Document administratif" />
+                      </div>
+                    }
                   </div>
                   <div class="row-actions" *ngIf="!readOnly()">
                     <button class="icon-btn" (click)="openEdit('administrativeData', item)" title="Modifier"><app-icon name="pencil" [size]="14" /></button>

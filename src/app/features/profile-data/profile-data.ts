@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { finalize, Observable } from 'rxjs';
+import { catchError, finalize, forkJoin, map, Observable, of } from 'rxjs';
 import { AlertComponent } from '../../shared/components/alert/alert';
 import { Icon } from '../../shared/components/icon/icon';
 import { Toast, ToastType } from '../../shared/components/toast/toast';
@@ -53,6 +53,7 @@ export class ProfileData {
   bankDocumentFile = signal<File | null>(null);
   familyDocumentFile = signal<File | null>(null);
   adminDocumentFile = signal<File | null>(null);
+  documentPreviewUrls = signal<Record<string, string>>({});
 
   toastMessage = signal('');
   toastType = signal<ToastType>('success');
@@ -147,6 +148,7 @@ export class ProfileData {
       next: (response) => {
         this.data.set(response);
         this.patchFormsFromData(response);
+        this.loadDocumentPreviews(response);
       },
       error: (err) => {
         console.error(err);
@@ -224,6 +226,43 @@ export class ProfileData {
     this.bankDocumentFile.set(null);
     this.familyDocumentFile.set(null);
     this.adminDocumentFile.set(null);
+  }
+
+  private loadDocumentPreviews(data: UserProfileData) {
+    const items: Array<[string, string | null | undefined]> = [
+      [this.documentName(data.bankAccount?.documentLink), data.bankAccount?.documentLink],
+      [this.documentName(data.familySituation?.documentLink), data.familySituation?.documentLink],
+      ...((data.administrativeData ?? []).map((item) => [this.documentName(item.documentLink), item.documentLink] as [string, string | null | undefined])),
+    ];
+
+    const requests = items
+      .filter(([, documentLink]) => !!documentLink)
+      .map(([key, documentLink]) =>
+        this.profileDataService.getDocumentBlob(this.formatDocumentPath(documentLink!)).pipe(
+          map((blob) => [key, URL.createObjectURL(blob)] as const),
+          catchError(() => of([key, null] as const))
+        )
+      );
+
+    if (!requests.length) {
+      this.documentPreviewUrls.set({});
+      return;
+    }
+
+    forkJoin(requests).subscribe({
+      next: (entries) => {
+        const nextUrls: Record<string, string> = {};
+        for (const [key, url] of entries) {
+          if (url) {
+            nextUrls[key] = url;
+          }
+        }
+        this.documentPreviewUrls.set(nextUrls);
+      },
+      error: () => {
+        this.documentPreviewUrls.set({});
+      },
+    });
   }
 
   getSectionTitle(section: SectionKey): string {
@@ -529,6 +568,13 @@ export class ProfileData {
       return '—';
     }
     return this.formatDocumentPath(pathValue);
+  }
+
+  documentPreviewUrl(pathValue?: string | null): string | null {
+    if (!pathValue) {
+      return null;
+    }
+    return this.documentPreviewUrls()[this.documentName(pathValue)] ?? null;
   }
 
   sectionItems(section: SectionKey): Array<AddressData | AdministrativeData | PersonChargeData | PersonUrgentData> {
