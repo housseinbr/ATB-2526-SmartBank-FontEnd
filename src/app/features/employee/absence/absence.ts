@@ -2,6 +2,7 @@ import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
+import { Icon } from '../../../shared/components/icon/icon';
 import { Toast, ToastType } from '../../../shared/components/toast/toast';
 import { AlertComponent } from '../../../shared/components/alert/alert';
 import { AbsenceApiService } from '../../../core/services/absence.service';
@@ -23,7 +24,7 @@ import { UserResponse } from '../../../core/models/user-response';
 @Component({
   selector: 'app-mes-absences',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, Toast, AlertComponent],
+  imports: [CommonModule, ReactiveFormsModule, Toast, AlertComponent, Icon],
   templateUrl: './absence.html',
   styleUrl: './absence.css',
 })

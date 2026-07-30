@@ -6,12 +6,13 @@ import { AuthService } from '../../../core/services/auth.service';
 import { Role } from '../../../core/models/role';
 import { Toast, ToastType } from '../../../shared/components/toast/toast';
 import { AlertComponent } from '../../../shared/components/alert/alert';
+import { Icon } from '../../../shared/components/icon/icon';
 import { Absence, StatusAbsence, STATUS_COLORS, STATUS_LABELS, TYPE_ABSENCE_LABELS } from '../../../core/models/absence';
 
 @Component({
   selector: 'app-supervisor-requests',
   standalone: true,
-  imports: [CommonModule, Toast, AlertComponent],
+  imports: [CommonModule, Toast, AlertComponent, Icon],
   templateUrl: './supervisor-requests.html',
   styleUrl: './supervisor-requests.css',
 })

@@ -42,9 +42,27 @@
   <section class="summary-grid">
     @for (card of summaryCards(); track card.label) {
       <article [ngClass]="['summary-card', 'summary-card--' + card.tone]">
-        <span class="summary-card__label">{{ card.label }}</span>
-        <strong class="summary-card__value">{{ card.value }}</strong>
-        <span class="summary-card__hint">{{ card.hint }}</span>
+        <div class="summary-card__icon">
+          @switch (card.tone) {
+            @case ('blue') {
+              <app-icon name="calendar" [size]="18" />
+            }
+            @case ('slate') {
+              <app-icon name="file-text" [size]="18" />
+            }
+            @case ('amber') {
+              <app-icon name="inbox" [size]="18" />
+            }
+            @case ('green') {
+              <app-icon name="check" [size]="18" />
+            }
+          }
+        </div>
+        <div class="summary-card__content">
+          <span class="summary-card__label">{{ card.label }}</span>
+          <strong class="summary-card__value">{{ card.value }}</strong>
+          <span class="summary-card__hint">{{ card.hint }}</span>
+        </div>
       </article>
     }
   </section>

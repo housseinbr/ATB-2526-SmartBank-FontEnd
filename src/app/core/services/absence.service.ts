@@ -36,6 +36,10 @@ export class AbsenceApiService {
     return this.http.get<HistorySold[]>(`${this.baseUrl}/history/me`, { headers: this.authHeaders() });
   }
 
+  getHistoryForUser(userId: number): Observable<HistorySold[]> {
+    return this.http.get<HistorySold[]>(`${this.baseUrl}/history/user/${userId}`, { headers: this.authHeaders() });
+  }
+
   getById(id: number): Observable<Absence> {
     return this.http.get<Absence>(`${this.baseUrl}/${id}`, { headers: this.authHeaders() });
   }

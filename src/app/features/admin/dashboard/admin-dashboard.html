@@ -366,6 +366,13 @@
                     </button>
                     <button
                       class="action-btn action-btn--view"
+                      (click)="openHistoryModal(user)"
+                      title="Historique du solde"
+                    >
+                      <app-icon name="activity" [size]="14" />
+                    </button>
+                    <button
+                      class="action-btn action-btn--view"
                       (click)="exportUserProfilePdf(user)"
                       title="Télécharger le profil en PDF"
                     >
@@ -642,6 +649,56 @@
               <div class="detail-row"><span class="detail-label">Salaire:</span><span class="detail-value">{{ selectedSupervisor()!.salaire | number:'1.0-0' }} DT</span></div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (showHistoryModal() && selectedHistoryUser()) {
+    <div class="modal-overlay" (click)="showHistoryModal.set(false)">
+      <div class="modal modal--view" (click)="$event.stopPropagation()">
+        <div class="modal__header">
+          <h2>Historique du solde</h2>
+          <button class="modal__close" (click)="showHistoryModal.set(false)">
+            <app-icon name="x" [size]="20" />
+          </button>
+        </div>
+        <div class="modal__body">
+          <div class="view-user" style="margin-bottom: 1rem;">
+            <div class="view-user__header">
+              <div class="view-user__avatar" [style.background]="getAvatarColor(selectedHistoryUser()!)">
+                {{ getInitials(selectedHistoryUser()!) }}
+              </div>
+              <div class="view-user__info">
+                <h3>{{ selectedHistoryUser()!.firstName }} {{ selectedHistoryUser()!.lastName }}</h3>
+                <span class="view-user__role" [style.background]="getRoleBg(selectedHistoryUser()!.role)" [style.color]="getRoleColor(selectedHistoryUser()!.role)">
+                  {{ selectedHistoryUser()!.role }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          @if (selectedHistory().length === 0) {
+            <div class="empty-state">Aucun mouvement de solde enregistré.</div>
+          } @else {
+            <div class="history-list">
+              @for (item of selectedHistory(); track item.idHistorySold) {
+                <article class="history-item">
+                  <div class="history-item__head">
+                    <div>
+                      <strong>{{ item.motif }}</strong>
+                      <span>{{ formatHistoryDate(item.dateAction) }}</span>
+                    </div>
+                    <time>{{ item.user.firstName }} {{ item.user.lastName }}</time>
+                  </div>
+                  <div class="history-item__grid">
+                    <div><span>Avant</span><strong>{{ item.soldeBefore | number:'1.0-2' }} j</strong></div>
+                    <div><span>Après</span><strong>{{ item.soldeAfter | number:'1.0-2' }} j</strong></div>
+                  </div>
+                </article>
+              }
+            </div>
+          }
         </div>
       </div>
     </div>

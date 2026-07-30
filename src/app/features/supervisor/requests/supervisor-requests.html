@@ -27,20 +27,40 @@
 
   <div class="kpi-grid">
     <div class="kpi-card">
-      <span class="kpi-card__label">Total</span>
-      <strong class="kpi-card__value">{{ stats().total }}</strong>
+      <div class="kpi-card__icon kpi-card__icon--total">
+        <app-icon name="file-text" [size]="18" />
+      </div>
+      <div class="kpi-card__content">
+        <span class="kpi-card__label">Total</span>
+        <strong class="kpi-card__value">{{ stats().total }}</strong>
+      </div>
     </div>
     <div class="kpi-card">
-      <span class="kpi-card__label">En attente</span>
-      <strong class="kpi-card__value">{{ stats().pending }}</strong>
+      <div class="kpi-card__icon kpi-card__icon--pending">
+        <app-icon name="inbox" [size]="18" />
+      </div>
+      <div class="kpi-card__content">
+        <span class="kpi-card__label">En attente</span>
+        <strong class="kpi-card__value">{{ stats().pending }}</strong>
+      </div>
     </div>
     <div class="kpi-card">
-      <span class="kpi-card__label">Validées</span>
-      <strong class="kpi-card__value">{{ stats().approved }}</strong>
+      <div class="kpi-card__icon kpi-card__icon--approved">
+        <app-icon name="check" [size]="18" />
+      </div>
+      <div class="kpi-card__content">
+        <span class="kpi-card__label">Validées</span>
+        <strong class="kpi-card__value">{{ stats().approved }}</strong>
+      </div>
     </div>
     <div class="kpi-card">
-      <span class="kpi-card__label">Refusées</span>
-      <strong class="kpi-card__value">{{ stats().refused }}</strong>
+      <div class="kpi-card__icon kpi-card__icon--refused">
+        <app-icon name="x" [size]="18" />
+      </div>
+      <div class="kpi-card__content">
+        <span class="kpi-card__label">Refusées</span>
+        <strong class="kpi-card__value">{{ stats().refused }}</strong>
+      </div>
     </div>
   </div>
 

@@ -13,9 +13,11 @@ import { AlertComponent } from '../../../shared/components/alert/alert';
 import { Router } from '@angular/router';
 import { UserService } from '../../../core/services/user.service';
 import { ProfileDataService } from '../../../core/services/profile-data.service';
+import { AbsenceApiService } from '../../../core/services/absence.service';
 import { UserResponse } from '../../../core/models/user-response';
 import { Role } from '../../../core/models/role';
 import { UserProfileData } from '../../../core/models/profile-data';
+import { HistorySold } from '../../../core/models/absence';
 import { environment } from '../../../../environments/environment';
 import { finalize } from 'rxjs';
 
@@ -29,6 +31,7 @@ import { finalize } from 'rxjs';
 export class AdminDashboard implements OnInit {
   private userService = inject(UserService);
   private profileDataService = inject(ProfileDataService);
+  private absenceApi = inject(AbsenceApiService);
   private router = inject(Router);
   private fb = inject(FormBuilder);
 
@@ -59,8 +62,11 @@ export class AdminDashboard implements OnInit {
   showViewModal = signal(false);
   showEditModal = signal(false);
   showSupervisorModal = signal(false);
+  showHistoryModal = signal(false);
   selectedUser = signal<UserResponse | null>(null);
   selectedSupervisor = signal<UserResponse | null>(null);
+  selectedHistoryUser = signal<UserResponse | null>(null);
+  selectedHistory = signal<HistorySold[]>([]);
   addForm: FormGroup;
   editForm: FormGroup;
 
@@ -422,6 +428,15 @@ private doAssignSupervisor(user: UserResponse, sup: UserResponse | null) {
     this.router.navigate(['/dashboard/admin/users', user.id, 'donnees']);
   }
 
+  openHistoryModal(user: UserResponse) {
+    this.selectedHistoryUser.set(user);
+    this.showHistoryModal.set(true);
+    this.absenceApi.getHistoryForUser(user.id).subscribe({
+      next: (items) => this.selectedHistory.set(items),
+      error: () => this.showToast('Impossible de charger l’historique.', 'error'),
+    });
+  }
+
   openSupervisorModal(supervisor: UserResponse | null) {
     if (supervisor) {
       this.selectedSupervisor.set(supervisor);
@@ -492,6 +507,13 @@ private doAssignSupervisor(user: UserResponse, sup: UserResponse | null) {
   getAvatarColor(user: UserResponse): string {
     const colors = ['#a4182a', '#2563eb', '#9333ea', '#16a34a', '#d97706', '#0891b2'];
     return colors[user.id % colors.length];
+  }
+
+  formatHistoryDate(value: string): string {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime())
+      ? value
+      : new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }).format(date);
   }
 
   exportUsersExcel(): void {

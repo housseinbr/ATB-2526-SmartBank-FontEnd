@@ -4,10 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { UserService } from '../../core/services/user.service';
+import { AbsenceApiService } from '../../core/services/absence.service';
 import { UserResponse } from '../../core/models/user-response';
 import { Role } from '../../core/models/role';
 import { Icon } from '../../shared/components/icon/icon';
 import { Toast, ToastType } from '../../shared/components/toast/toast';
+import { HistorySold } from '../../core/models/absence';
 
 @Component({
   selector: 'app-profile',
@@ -19,9 +21,12 @@ import { Toast, ToastType } from '../../shared/components/toast/toast';
 export class Profile {
   private authService = inject(AuthService);
   private userService = inject(UserService);
+  private absenceApi = inject(AbsenceApiService);
+  readonly Role = Role;
   readonly initialLeave = 22;
 
   user = signal<UserResponse | null>(null);
+  history = signal<HistorySold[]>([]);
   loading = signal(false);
   error = signal<string | null>(null);
   saving = signal(false);
@@ -98,6 +103,13 @@ export class Profile {
     return `${s.firstName} ${s.lastName}`;
   }
 
+  get currentUserRole(): Role | null {
+    return this.authService.currentUser()?.role ?? null;
+  }
+
+  historyTitle = computed(() => 'Historique du solde');
+  historySubtitle = computed(() => this.currentUserRole === Role.EMPLOYE || this.currentUserRole === Role.SUPERVISEUR ? 'Vos mouvements récents' : 'Mouvements récents du solde');
+
   get userIdLabel(): string {
     return this.user()?.id ? `#${this.user()?.id}` : '—';
   }
@@ -137,12 +149,23 @@ export class Profile {
         next: (u) => {
           this.user.set(u);
           this.error.set(null);
+          this.loadHistory();
         },
         error: (err) => {
           this.error.set('Erreur lors du chargement du profil');
           console.error(err);
         },
       });
+  }
+
+  loadHistory() {
+    const currentUser = this.currentUser();
+    if (!currentUser?.id) return;
+
+    this.absenceApi.getMineHistory().subscribe({
+      next: (items) => this.history.set(items),
+      error: (err) => console.error(err),
+    });
   }
 
   // ===== ÉDITION =====
@@ -237,4 +260,16 @@ export class Profile {
       },
     });
   }
+
+  formatHistoryDate(value: string): string {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime())
+      ? value
+      : new Intl.DateTimeFormat('fr-FR', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+        }).format(date);
+  }
+
 }

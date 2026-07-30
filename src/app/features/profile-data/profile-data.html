@@ -43,18 +43,22 @@
       </div>
       <div class="hero-card__stats">
         <div class="mini-stat">
+          <app-icon name="file-text" [size]="16" />
           <span>{{ sectionsFilled() }}</span>
           <small>Sections complétées</small>
         </div>
         <div class="mini-stat">
+          <app-icon name="users" [size]="16" />
           <span>{{ summaryCards().addresses }}</span>
           <small>Adresses</small>
         </div>
         <div class="mini-stat">
+          <app-icon name="user" [size]="16" />
           <span>{{ summaryCards().dependents }}</span>
           <small>À charge</small>
         </div>
         <div class="mini-stat">
+          <app-icon name="bell" [size]="16" />
           <span>{{ summaryCards().urgents }}</span>
           <small>Urgences</small>
         </div>

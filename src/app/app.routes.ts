@@ -79,6 +79,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/profile/profile').then(m => m.Profile),
       },
       {
+        path: 'comments',
+        canActivate: [roleGuard(Role.EMPLOYE, Role.SUPERVISEUR, Role.ADMIN)],
+        loadComponent: () => import('./features/comments/comments-page').then(m => m.CommentsPage),
+      },
+      {
         path: 'notifications',
         loadComponent: () => import('./features/notifications/notifications').then(m => m.NotificationsPage),
       },

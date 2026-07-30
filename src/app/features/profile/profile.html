@@ -198,6 +198,7 @@
           </div>
         </div>
       </div>
+
     </div>
   }
 
@@ -249,6 +250,48 @@
           </button>
         </div>
       </div>
+    </div>
+
+    <div class="profile-card profile-card--full">
+      <div class="card-header card-header--split">
+        <div>
+          <h2><app-icon name="activity" [size]="18" /> {{ historyTitle() }}</h2>
+          <p class="card-subtitle">{{ historySubtitle() }}</p>
+        </div>
+        <span class="history-count">{{ history().length }} mouvement(s)</span>
+      </div>
+
+      @if (!history().length) {
+        <div class="comment-empty">
+          <app-icon name="inbox" [size]="22" />
+          <p>Aucun mouvement de solde pour le moment.</p>
+        </div>
+      } @else {
+        <div class="history-table-wrapper">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Motif</th>
+                <th>Utilisateur</th>
+                <th>Avant</th>
+                <th>Après</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of history(); track item.idHistorySold) {
+                <tr>
+                  <td>{{ formatHistoryDate(item.dateAction) }}</td>
+                  <td>{{ item.motif }}</td>
+                  <td>{{ item.user.firstName }} {{ item.user.lastName }}</td>
+                  <td>{{ item.soldeBefore | number:'1.0-2' }} j</td>
+                  <td>{{ item.soldeAfter | number:'1.0-2' }} j</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
     </div>
   }
 

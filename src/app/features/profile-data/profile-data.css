@@ -111,6 +111,11 @@
   gap: 0.15rem;
 }
 
+.mini-stat app-icon {
+  color: #a4182a;
+  margin-bottom: 0.1rem;
+}
+
 .mini-stat span {
   font-size: 1.5rem;
   font-weight: 800;

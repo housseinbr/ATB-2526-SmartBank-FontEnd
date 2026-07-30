@@ -1,0 +1,158 @@
+<section class="comments-page">
+  <app-toast [message]="toastMessage()" [type]="toastType()" [visible]="toastVisible()" />
+  <app-alert
+    [visible]="alertVisible()"
+    [title]="alertTitle()"
+    [message]="alertMessage()"
+    [type]="alertType()"
+    (confirmed)="onAlertConfirm()"
+    (cancelled)="onAlertCancel()"
+  />
+
+  <header class="comments-hero">
+    <div>
+      <p class="comments-hero__eyebrow">Espace commentaires</p>
+      <h1 class="comments-hero__title">Commentaires métier</h1>
+      <p class="comments-hero__subtitle">
+        Rédige des notes métier, idées ou retours. Les employés écrivent pour leur superviseur et les admins,
+        les superviseurs écrivent pour les admins.
+      </p>
+    </div>
+    <button class="refresh-btn" type="button" (click)="loadComments()">
+      <app-icon name="check" [size]="16" /> Actualiser
+    </button>
+  </header>
+
+  <div class="comments-stats">
+    <article class="stats-card">
+      <div class="stats-card__icon stats-card__icon--blue">
+        <app-icon name="file-text" [size]="18" />
+      </div>
+      <div class="stats-card__content">
+        <span class="stats-card__value">{{ stats().total }}</span>
+        <span class="stats-card__label">Commentaires</span>
+      </div>
+    </article>
+    <article class="stats-card">
+      <div class="stats-card__icon stats-card__icon--green">
+        <app-icon name="users" [size]="18" />
+      </div>
+      <div class="stats-card__content">
+        <span class="stats-card__value">{{ stats().visibleToMe }}</span>
+        <span class="stats-card__label">Visibles pour moi</span>
+      </div>
+    </article>
+    <article class="stats-card">
+      <div class="stats-card__icon stats-card__icon--amber">
+        <app-icon name="check" [size]="18" />
+      </div>
+      <div class="stats-card__content">
+        <span class="stats-card__value">{{ stats().canPublish }}</span>
+        <span class="stats-card__label">Droit de publier</span>
+      </div>
+    </article>
+  </div>
+
+  <div class="comments-grid">
+    <section class="comments-card comments-card--composer">
+      <div class="comments-card__header">
+        <div>
+          <h2><app-icon name="file-text" [size]="18" /> Nouveau commentaire</h2>
+          <p>Choisis une suggestion ou écris ton propre message.</p>
+        </div>
+      </div>
+
+      @if (canComment()) {
+        <div class="suggestions">
+          @for (item of suggestions; track item) {
+            <button type="button" class="suggestion-pill" (click)="applySuggestion(item)">
+              {{ item }}
+            </button>
+          }
+        </div>
+
+        <textarea
+          rows="6"
+          [(ngModel)]="commentText"
+          placeholder="Exemple : point métier, remarque, demande de suivi..."
+        ></textarea>
+
+        <div class="composer-footer">
+          <span class="composer-footer__hint">
+            {{ currentRole() === Role.EMPLOYE ? 'Visible par le superviseur et les admins' : currentRole() === Role.SUPERVISEUR ? 'Visible par les admins' : 'Vue admin complète' }}
+          </span>
+          <div class="composer-footer__actions">
+            <button class="btn btn--secondary" type="button" (click)="deleteDraft()">Effacer</button>
+            <button class="btn btn--primary" type="button" (click)="submit()" [disabled]="saving()">
+              @if (saving()) {
+                <span class="spinner-small"></span> Envoi...
+              } @else {
+                <app-icon name="upload" [size]="16" /> Publier
+              }
+            </button>
+          </div>
+        </div>
+      } @else {
+        <div class="comments-empty comments-empty--info">
+          <app-icon name="shield" [size]="22" />
+          <p>Tu n’as pas accès à la publication de commentaires.</p>
+        </div>
+      }
+    </section>
+
+    <section class="comments-card">
+      <div class="comments-card__header">
+        <div>
+          <h2><app-icon name="users" [size]="18" /> Suggestions métier</h2>
+          <p>Des formats rapides pour structurer vos retours.</p>
+        </div>
+      </div>
+      <div class="topic-list">
+        <div class="topic-item">Suivi d’une demande interne</div>
+        <div class="topic-item">Retour sur une procédure</div>
+        <div class="topic-item">Point sur un dossier client</div>
+        <div class="topic-item">Clarification métier</div>
+        <div class="topic-item">Observation administrative</div>
+      </div>
+    </section>
+
+    <section class="comments-card comments-card--full">
+      <div class="comments-card__header comments-card__header--split">
+        <div>
+          <h2><app-icon name="file-text" [size]="18" /> Historique</h2>
+          <p>
+            {{ canSeeAll() ? 'Tous les commentaires de la plateforme.' : 'Tes commentaires publiés.' }}
+          </p>
+        </div>
+        <span class="comments-count">{{ comments().length }} élément(s)</span>
+      </div>
+
+      @if (loading()) {
+        <div class="comments-empty">
+          <div class="spinner"></div>
+          <p>Chargement...</p>
+        </div>
+      } @else if (!comments().length) {
+        <div class="comments-empty">
+          <app-icon name="inbox" [size]="22" />
+          <p>Aucun commentaire pour le moment.</p>
+        </div>
+      } @else {
+        <div class="comment-list">
+          @for (comment of comments(); track comment.idComment) {
+            <article class="comment-item">
+              <div class="comment-item__head">
+                <div>
+                  <strong>{{ authorLabel(comment) }}</strong>
+                  <span>{{ comment.userRole }}</span>
+                </div>
+                <time>{{ formatDate(comment.date) }}</time>
+              </div>
+              <p>{{ comment.text }}</p>
+            </article>
+          }
+        </div>
+      }
+    </section>
+  </div>
+</section>
