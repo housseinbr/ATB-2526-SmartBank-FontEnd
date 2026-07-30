@@ -20,6 +20,7 @@ import { UserResponse } from '../../../core/models/user-response';
 export class SupervisorDashboard implements OnInit {
   teamMembers = signal<UserResponse[]>([]);
   teamAbsences = signal<Absence[]>([]);
+  selectedMemberId = signal<number | null>(null);
   loading = signal(false);
 
   toastMessage = signal('');
@@ -72,10 +73,73 @@ export class SupervisorDashboard implements OnInit {
     };
   });
 
+  readonly selectedMember = computed(() => {
+    const memberId = this.selectedMemberId();
+    if (!memberId) {
+      return null;
+    }
+
+    return this.teamMembers().find((member) => member.id === memberId) ?? null;
+  });
+
+  readonly selectedMemberAbsences = computed(() => {
+    const memberId = this.selectedMemberId();
+    if (!memberId) {
+      return [];
+    }
+
+    return this.teamAbsences()
+      .filter((absence) => absence.user?.id === memberId)
+      .sort((left, right) => right.dateStart.localeCompare(left.dateStart));
+  });
+
+  readonly selectedMemberStats = computed(() => {
+    const absences = this.selectedMemberAbsences();
+    return {
+      total: absences.length,
+      validated: absences.filter((absence) => absence.status === StatusAbsence.VALIDE).length,
+      pending: absences.filter((absence) => absence.status === StatusAbsence.EN_ATTENTE).length,
+      refused: absences.filter((absence) => absence.status === StatusAbsence.REFUSE).length,
+    };
+  });
+
   getInitials(user?: UserResponse | null): string {
     const first = user?.firstName?.charAt(0) ?? '';
     const last = user?.lastName?.charAt(0) ?? '';
     return `${first}${last}` || '?';
+  }
+
+  selectMember(member: UserResponse): void {
+    this.selectedMemberId.set(member.id);
+  }
+
+  clearSelectedMember(): void {
+    this.selectedMemberId.set(null);
+  }
+
+  formatDate(value?: string | null): string {
+    if (!value) {
+      return '—';
+    }
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return value;
+    }
+
+    return new Intl.DateTimeFormat('fr-FR', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    }).format(date);
+  }
+
+  supervisorLabel(member?: UserResponse | null): string {
+    if (!member?.superviseur) {
+      return '—';
+    }
+
+    return `${member.superviseur.firstName} ${member.superviseur.lastName}`;
   }
 
   private showToast(message: string, type: ToastType = 'success'): void {

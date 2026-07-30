@@ -16,7 +16,9 @@ export const SIDEBAR_CONFIG: Record<Role, SidebarConfig> = {
   [Role.ADMIN]: {
     brandLabel: 'Espace Admin',
     items: [
-      { label: 'Utilisateurs', route: '/dashboard/admin', icon: 'users' },
+      { label: 'Utilisateurs', route: '/dashboard/admin/users', icon: 'users' },
+      { label: 'Demandes', route: '/dashboard/admin/demandes', icon: 'inbox' },
+      { label: 'Calendrier', route: '/dashboard/admin/calendrier', icon: 'calendar' },
       
     ],
   },

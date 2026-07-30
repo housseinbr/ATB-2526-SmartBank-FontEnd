@@ -2,14 +2,20 @@
   <div class="page-header">
     <div>
       <h1 class="page-title">Calendrier des absences</h1>
-      <p class="page-subtitle">Vue plus lisible des demandes de l’équipe et de vos propres absences</p>
+      <p class="page-subtitle">Cliquez sur une date ou un membre pour afficher les détails</p>
     </div>
+
     <div class="toolbar">
-      <div class="nav-group">
-        <button class="nav-btn" type="button" (click)="previous()">‹</button>
+      <div class="nav-group" aria-label="Navigation du calendrier">
+        <button class="nav-btn" type="button" (click)="previous()" aria-label="Période précédente">
+          <app-icon name="chevron-left" [size]="16" />
+        </button>
         <button class="nav-btn nav-btn--ghost" type="button" (click)="today()">Aujourd’hui</button>
-        <button class="nav-btn" type="button" (click)="next()">›</button>
+        <button class="nav-btn" type="button" (click)="next()" aria-label="Période suivante">
+          <app-icon name="chevron-left" [size]="16" class="nav-btn__icon--right" />
+        </button>
       </div>
+
       <div class="mode-switch">
         <button class="mode-switch__btn" [class.mode-switch__btn--active]="mode() === 'month'" (click)="setMode('month')">Mois</button>
         <button class="mode-switch__btn" [class.mode-switch__btn--active]="mode() === 'week'" (click)="setMode('week')">Semaine</button>
@@ -19,104 +25,282 @@
   </div>
 
   <div class="hero-card">
-    <div>
+    <div class="hero-card__content">
       <p class="hero-card__kicker">{{ modeLabel() }}</p>
       <h2 class="hero-card__title">{{ headerLabel() }}</h2>
-      <p class="hero-card__subtitle">Les couleurs distinguent les statuts et les types de demandes.</p>
+      <p class="hero-card__subtitle">Les cartes, couleurs et badges facilitent la lecture du planning.</p>
     </div>
+
     <div class="hero-card__legend">
-      <span><i class="dot dot--green"></i> Validé</span>
+      <span><i class="dot dot--green"></i> Validée</span>
       <span><i class="dot dot--orange"></i> En attente</span>
-      <span><i class="dot dot--red"></i> Refusé</span>
+      <span><i class="dot dot--red"></i> Refusée</span>
+    </div>
+  </div>
+
+  <div class="legend-strip">
+    <div class="legend-block">
+      <div class="legend-block__title">Général</div>
+      <div class="legend-block__items">
+        <span><i class="legend-square legend-square--today"></i> Aujourd’hui</span>
+        <span><i class="legend-line"></i> Fin de semaine</span>
+      </div>
+    </div>
+    <div class="legend-block">
+      <div class="legend-block__title">Absences</div>
+      <div class="legend-block__items">
+        <span><i class="legend-square legend-square--validated"></i> Congés validés</span>
+        <span><i class="legend-square legend-square--pending"></i> En attente</span>
+        <span><i class="legend-square legend-square--refused"></i> Refusées</span>
+      </div>
+    </div>
+    <div class="legend-block">
+      <div class="legend-block__title">Lecture rapide</div>
+      <div class="legend-block__items">
+        <span><i class="legend-dot legend-dot--team"></i> Équipe</span>
+        <span><i class="legend-dot legend-dot--mine"></i> Mes absences</span>
+      </div>
     </div>
   </div>
 
   <div class="kpi-grid">
-    <div class="kpi-card"><span>Demandes</span><strong>{{ stats().total }}</strong></div>
-    <div class="kpi-card"><span>En attente</span><strong>{{ stats().pending }}</strong></div>
-    <div class="kpi-card"><span>Validées</span><strong>{{ stats().approved }}</strong></div>
-    <div class="kpi-card"><span>Refusées</span><strong>{{ stats().refused }}</strong></div>
+    <div class="kpi-card">
+      <app-icon name="calendar" [size]="20" />
+      <div>
+        <span>Demandes</span>
+        <strong>{{ stats().total }}</strong>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <app-icon name="inbox" [size]="20" />
+      <div>
+        <span>En attente</span>
+        <strong>{{ stats().pending }}</strong>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <app-icon name="check" [size]="20" />
+      <div>
+        <span>Validées</span>
+        <strong>{{ stats().approved }}</strong>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <app-icon name="x" [size]="20" />
+      <div>
+        <span>Refusées</span>
+        <strong>{{ stats().refused }}</strong>
+      </div>
+    </div>
   </div>
 
-  @if (loading()) {
-    <div class="empty-state">Chargement...</div>
-  } @else {
-    @if (mode() === 'month') {
-      <div class="calendar-shell">
-        <div class="calendar-weekdays">
-          @for (day of ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']; track day) {
-            <div>{{ day }}</div>
-          }
-        </div>
-        <div class="calendar-month">
-          @for (cell of monthCells(); track cell.date.toISOString()) {
-            <div class="day-cell" [class.day-cell--muted]="!cell.inCurrentPeriod" [class.day-cell--today]="isToday(cell.date)">
-              <div class="day-cell__head">
-                <span class="day-cell__number">{{ cell.dayNumber }}</span>
-              </div>
-              <div class="day-cell__events">
-                @for (event of cell.items.slice(0, 2); track event.idAbcance) {
-                  <div class="mini-event" [class]="'mini-event--' + statusColors[event.status!]">
-                    <span class="mini-event__dot"></span>
-                    <span class="mini-event__text">{{ event.user?.firstName }} {{ event.user?.lastName }}</span>
+  <div class="calendar-layout">
+    <section class="calendar-shell">
+      @if (loading()) {
+        <div class="empty-state">Chargement...</div>
+      } @else {
+        @if (mode() === 'month') {
+          <div class="calendar-weekdays">
+            @for (day of ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']; track day) {
+              <div>{{ day }}</div>
+            }
+          </div>
+          <div class="calendar-month">
+            @for (cell of monthCells(); track cell.date.toISOString()) {
+              <button
+                type="button"
+                class="day-cell"
+                [class.day-cell--muted]="!cell.inCurrentPeriod"
+                [class.day-cell--today]="isToday(cell.date)"
+                [class.day-cell--selected]="isSelected(cell.date)"
+                (click)="selectDate(cell.date)"
+              >
+                <div class="day-cell__head">
+                  <span class="day-cell__number">{{ cell.dayNumber }}</span>
+                </div>
+
+                <div class="day-cell__events">
+                  @for (event of cell.items.slice(0, 2); track event.idAbcance) {
+                    <div
+                      [ngClass]="[
+                        'mini-event',
+                        'mini-event--' + statusColors[event.status || StatusAbsence.EN_ATTENTE]
+                      ]"
+                    >
+                      <span class="mini-event__dot"></span>
+                      <span class="mini-event__text">{{ event.user?.firstName }} {{ event.user?.lastName }}</span>
+                    </div>
+                  }
+                  @if (cell.items.length > 2) {
+                    <div class="mini-event mini-event--more">+{{ cell.items.length - 2 }} autres</div>
+                  }
+                </div>
+              </button>
+            }
+          </div>
+        } @else if (mode() === 'week') {
+          <div class="week-grid">
+            @for (cell of weekCells(); track cell.date.toISOString()) {
+              <button
+                type="button"
+                class="week-day"
+                [class.week-day--selected]="isSelected(cell.date)"
+                (click)="selectDate(cell.date)"
+              >
+                <div class="week-day__header">
+                  <span>{{ cell.dayName }}</span>
+                  <strong>{{ cell.dayNumber }}</strong>
+                </div>
+                <div class="week-day__body">
+                  @for (event of cell.items; track event.idAbcance) {
+                    <div
+                      [ngClass]="[
+                        'week-event',
+                        'week-event--' + statusColors[event.status || StatusAbsence.EN_ATTENTE]
+                      ]"
+                    >
+                      <div class="week-event__row">
+                        <span class="week-event__type">{{ typeLabels[event.type] }}</span>
+                        <span
+                          [ngClass]="[
+                            'status-badge',
+                            'status-badge--' + statusColors[event.status || StatusAbsence.EN_ATTENTE]
+                          ]"
+                        >
+                          {{ statusLabels[event.status || StatusAbsence.EN_ATTENTE] }}
+                        </span>
+                      </div>
+                      <span class="week-event__name">{{ event.user?.firstName }} {{ event.user?.lastName }}</span>
+                      <span class="week-event__meta">{{ formatDate(event.dateStart) }} → {{ formatDate(event.dateEnd) }}</span>
+                    </div>
+                  }
+                  @if (cell.items.length === 0) {
+                    <div class="empty-slot">Aucune absence</div>
+                  }
+                </div>
+              </button>
+            }
+          </div>
+        } @else {
+          <div class="year-grid">
+            @for (month of yearCards(); track month.monthIndex) {
+              <button type="button" class="year-card" (click)="selectMonth(month.monthIndex)">
+                <div class="year-card__header">
+                  <div>
+                    <h3>{{ month.label }}</h3>
+                    <span>{{ month.count }} demande(s)</span>
                   </div>
-                }
-                @if (cell.items.length > 2) {
-                  <div class="mini-event mini-event--more">+{{ cell.items.length - 2 }} autres</div>
-                }
-              </div>
-            </div>
+                  <app-icon name="calendar" [size]="16" />
+                </div>
+                <div class="year-card__body">
+                  @for (event of month.items; track event.idAbcance) {
+                    <div class="year-event">
+                      <span
+                        [ngClass]="[
+                          'year-event__dot',
+                          'year-event__dot--' + statusColors[event.status || StatusAbsence.EN_ATTENTE]
+                        ]"
+                      ></span>
+                      <span class="year-event__name">{{ event.user?.firstName }} {{ event.user?.lastName }}</span>
+                      <span class="year-event__meta">{{ formatDate(event.dateStart) }}</span>
+                    </div>
+                  }
+                  @if (month.items.length === 0) {
+                    <div class="empty-slot">Aucune absence</div>
+                  }
+                </div>
+              </button>
+            }
+          </div>
+        }
+      }
+    </section>
+
+    <aside class="detail-panel">
+      <div class="detail-card">
+        <div class="detail-card__header">
+          <div>
+            <h3>Détail du jour</h3>
+            <p>{{ formatDate(selectedDate()) }}</p>
+          </div>
+          <button type="button" class="detail-card__clear" (click)="today()">
+            <app-icon name="calendar" [size]="16" />
+          </button>
+        </div>
+
+        <div class="detail-list">
+          @if (selectedDayItems().length === 0) {
+            <div class="empty-slot">Aucune absence sur cette date</div>
+          } @else {
+            @for (event of selectedDayItems(); track event.idAbcance) {
+              <button type="button" class="detail-item" (click)="selectMember(event.user!)">
+                <span
+                  [ngClass]="[
+                    'detail-item__indicator',
+                    'detail-item__indicator--' + statusColors[event.status || StatusAbsence.EN_ATTENTE]
+                  ]"
+                ></span>
+                <div class="detail-item__content">
+                  <strong>{{ event.user?.firstName }} {{ event.user?.lastName }}</strong>
+                  <span>{{ typeLabels[event.type] }} · {{ formatDate(event.dateStart) }} → {{ formatDate(event.dateEnd) }}</span>
+                </div>
+                <span
+                  [ngClass]="[
+                    'status-badge',
+                    'status-badge--' + statusColors[event.status || StatusAbsence.EN_ATTENTE]
+                  ]"
+                >
+                  {{ statusLabels[event.status || StatusAbsence.EN_ATTENTE] }}
+                </span>
+              </button>
+            }
           }
         </div>
       </div>
-    } @else if (mode() === 'week') {
-      <div class="week-grid">
-        @for (cell of weekCells(); track cell.date.toISOString()) {
-          <div class="week-day">
-            <div class="week-day__header">
-              <span>{{ cell.dayName }}</span>
-              <strong>{{ cell.dayNumber }}</strong>
-            </div>
-            <div class="week-day__body">
-              @for (event of cell.items; track event.idAbcance) {
-                <div class="week-event" [class]="'week-event--' + statusColors[event.status!]">
-                  <span class="week-event__type">{{ typeLabels[event.type] }}</span>
-                  <span class="week-event__name">{{ event.user?.firstName }} {{ event.user?.lastName }}</span>
-                  <span class="week-event__meta">{{ event.dateStart }} → {{ event.dateEnd }}</span>
-                </div>
-              }
-              @if (cell.items.length === 0) {
-                <div class="empty-slot">Aucune absence</div>
-              }
-            </div>
+
+      <div class="detail-card">
+        <div class="detail-card__header">
+          <div>
+            <h3>Mon équipe</h3>
+            <p>Cliquez sur un membre pour filtrer le calendrier</p>
           </div>
-        }
-      </div>
-    } @else {
-      <div class="year-grid">
-        @for (month of yearCards(); track month.monthIndex) {
-          <div class="year-card">
-            <div class="year-card__header">
-              <div>
-                <h3>{{ month.label }}</h3>
-                <span>{{ month.count }} demande(s)</span>
+          @if (selectedMemberId()) {
+            <button type="button" class="detail-card__clear" (click)="clearMemberFilter()">Effacer</button>
+          }
+        </div>
+
+        <div class="team-list">
+          @for (member of teamMembers(); track member.id) {
+            <button
+              type="button"
+              class="team-item"
+              [class.team-item--selected]="selectedMemberId() === member.id"
+              (click)="selectMember(member)"
+            >
+              <div class="team-item__avatar">{{ getInitials(member.firstName, member.lastName) }}</div>
+              <div class="team-item__content">
+                <span class="team-item__name">{{ member.firstName }} {{ member.lastName }}</span>
+                <span class="team-item__meta">{{ member.role }} · Solde {{ member.solde | number:'1.0-2' }} j</span>
               </div>
-            </div>
-            <div class="year-card__body">
-              @for (event of month.items; track event.idAbcance) {
-                <div class="year-event">
-                  <span class="year-event__dot" [class]="'year-event__dot--' + statusColors[event.status!]"></span>
-                  <span class="year-event__name">{{ event.user?.firstName }} {{ event.user?.lastName }}</span>
-                  <span class="year-event__meta">{{ event.dateStart }}</span>
-                </div>
-              }
-              @if (month.items.length === 0) {
-                <div class="empty-slot">Aucune absence</div>
-              }
-            </div>
-          </div>
-        }
+              <app-icon name="chevron-left" [size]="14" class="team-item__chevron" />
+            </button>
+          }
+        </div>
       </div>
-    }
-  }
+
+      <div class="detail-card">
+        <div class="detail-card__header">
+          <div>
+            <h3>Vue rapide du mois</h3>
+            <p>{{ selectedMonthSummary().count }} absence(s)</p>
+          </div>
+        </div>
+        <div class="month-summary">
+          <div><span>Validées</span><strong>{{ selectedMonthSummary().approved }}</strong></div>
+          <div><span>En attente</span><strong>{{ selectedMonthSummary().pending }}</strong></div>
+          <div><span>Refusées</span><strong>{{ selectedMonthSummary().refused }}</strong></div>
+        </div>
+      </div>
+    </aside>
+  </div>
 </div>

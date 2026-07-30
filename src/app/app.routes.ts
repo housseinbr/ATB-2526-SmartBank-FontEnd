@@ -19,7 +19,21 @@ export const routes: Routes = [
       {
         path: 'admin',
         canActivate: [roleGuard(Role.ADMIN)],
-        loadComponent: () => import('./features/admin/dashboard/admin-dashboard').then(m => m.AdminDashboard),
+        children: [
+          { path: '', redirectTo: 'users', pathMatch: 'full' },
+          {
+            path: 'users',
+            loadComponent: () => import('./features/admin/dashboard/admin-dashboard').then(m => m.AdminDashboard),
+          },
+          {
+            path: 'demandes',
+            loadComponent: () => import('./features/supervisor/requests/supervisor-requests').then(m => m.SupervisorRequests),
+          },
+          {
+            path: 'calendrier',
+            loadComponent: () => import('./features/supervisor/calendar/supervisor-calendar').then(m => m.SupervisorCalendar),
+          },
+        ],
       },
       {
         path: 'superviseur',

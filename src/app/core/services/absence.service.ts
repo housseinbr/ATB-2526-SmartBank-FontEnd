@@ -13,7 +13,6 @@ export class AbsenceApiService {
 
   private authHeaders(): HttpHeaders {
     const token = this.authService.getToken();
-    console.debug('[AbsenceApiService] token present:', !!token);
     return token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : new HttpHeaders();
   }
 

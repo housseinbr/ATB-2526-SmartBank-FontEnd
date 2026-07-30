@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { finalize } from 'rxjs';
 import { AbsenceApiService } from '../../../core/services/absence.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { Role } from '../../../core/models/role';
 import { Toast, ToastType } from '../../../shared/components/toast/toast';
 import { AlertComponent } from '../../../shared/components/alert/alert';
 import { Absence, StatusAbsence, STATUS_COLORS, STATUS_LABELS, TYPE_ABSENCE_LABELS } from '../../../core/models/absence';
@@ -43,13 +44,16 @@ export class SupervisorRequests implements OnInit {
   }
 
   load(): void {
-    if (!this.authService.getToken()) {
+    const currentUser = this.authService.currentUser();
+    if (!this.authService.getToken() || !currentUser?.id) {
       this.showToast('Session absente, reconnectez-vous', 'error');
       return;
     }
 
     this.loading.set(true);
-    this.absenceApi.getTeamAbsences().pipe(
+    const source = currentUser.role === Role.ADMIN ? this.absenceApi.getAll() : this.absenceApi.getTeamAbsences();
+
+    source.pipe(
       finalize(() => this.loading.set(false))
     ).subscribe({
       next: (data) => this.requests.set(data),

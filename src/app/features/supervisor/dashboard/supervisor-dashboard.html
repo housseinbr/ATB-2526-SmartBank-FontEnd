@@ -63,52 +63,112 @@
       } @else {
         <div class="team-list">
           @for (member of teamMembers(); track member.id) {
-            <div class="team-item">
+            <button
+              type="button"
+              class="team-item"
+              [class.team-item--selected]="selectedMemberId() === member.id"
+              (click)="selectMember(member)"
+            >
               <div class="team-item__avatar">{{ getInitials(member) }}</div>
               <div class="team-item__content">
                 <span class="team-item__name">{{ member.firstName }} {{ member.lastName }}</span>
-                <span class="team-item__meta">{{ member.role }} · Solde {{ member.solde | number:'1.0-2' }}</span>
+                <span class="team-item__meta">{{ member.role }} · Solde {{ member.solde | number:'1.0-2' }} j</span>
               </div>
               <span class="team-item__status" [class.team-item__status--green]="member.actif === 'actif'">
                 {{ member.actif }}
               </span>
-            </div>
+            </button>
           }
         </div>
       }
     </div>
 
-    <div class="data-card">
-      <div class="data-card__header">
-        <div>
-          <h2 class="data-card__title">Situation absences</h2>
-          <span class="data-card__subtitle">Validées et en attente</span>
-        </div>
-      </div>
-
-      <div class="absences-summary">
-        <div class="summary-pill summary-pill--green">
-          <span>Validées</span>
-          <strong>{{ stats().validated }}</strong>
-        </div>
-        <div class="summary-pill summary-pill--orange">
-          <span>En attente</span>
-          <strong>{{ stats().pending }}</strong>
-        </div>
-      </div>
-
-      <div class="team-mini-list">
-        @for (absence of teamAbsences().slice(0, 6); track absence.idAbcance) {
-          <div class="team-mini-item">
-            <div class="team-mini-item__content">
-              <span class="team-mini-item__name">{{ absence.user?.firstName }} {{ absence.user?.lastName }}</span>
-              <span class="team-mini-item__meta">{{ absence.dateStart }} → {{ absence.dateEnd }}</span>
-            </div>
-            <span class="team-item__status" [class]="'team-item__status--' + statusColors[absence.status!]">
-              {{ absence.status }}
-            </span>
+    <div class="side-stack">
+      <div class="data-card">
+        <div class="data-card__header">
+          <div>
+            <h2 class="data-card__title">Détail du membre</h2>
+            <span class="data-card__subtitle">Toutes les informations disponibles</span>
           </div>
+          @if (selectedMember()) {
+            <button type="button" class="data-card__link" (click)="clearSelectedMember()">Effacer</button>
+          }
+        </div>
+
+        @if (selectedMember(); as member) {
+          <div class="member-panel">
+            <div class="member-panel__hero">
+              <div class="member-panel__avatar">{{ getInitials(member) }}</div>
+              <div class="member-panel__identity">
+                <strong>{{ member.firstName }} {{ member.lastName }}</strong>
+                <span>{{ member.useName }}</span>
+                <span>{{ member.role }}</span>
+              </div>
+              <span class="team-item__status" [class.team-item__status--green]="member.actif === 'actif'">
+                {{ member.actif }}
+              </span>
+            </div>
+
+            <div class="member-grid">
+              <div class="member-grid__item"><span>ID</span><strong>#{{ member.id }}</strong></div>
+              <div class="member-grid__item"><span>CIN</span><strong>{{ member.cin }}</strong></div>
+              <div class="member-grid__item"><span>Email</span><strong>{{ member.email }}</strong></div>
+              <div class="member-grid__item"><span>Téléphone</span><strong>{{ member.numTel || '—' }}</strong></div>
+              <div class="member-grid__item"><span>Fax</span><strong>{{ member.numFax || '—' }}</strong></div>
+              <div class="member-grid__item"><span>Naissance</span><strong>{{ formatDate(member.birthday) }}</strong></div>
+              <div class="member-grid__item"><span>Sexe</span><strong>{{ member.sexe }}</strong></div>
+              <div class="member-grid__item"><span>Superviseur</span><strong>{{ supervisorLabel(member) }}</strong></div>
+            </div>
+
+            <div class="member-stats">
+              <div><span>Absences</span><strong>{{ selectedMemberStats().total }}</strong></div>
+              <div><span>Validées</span><strong>{{ selectedMemberStats().validated }}</strong></div>
+              <div><span>En attente</span><strong>{{ selectedMemberStats().pending }}</strong></div>
+              <div><span>Refusées</span><strong>{{ selectedMemberStats().refused }}</strong></div>
+            </div>
+
+            <div class="member-balance">
+              <span>Solde congés</span>
+              <strong>{{ member.solde | number:'1.2-2' }} jours</strong>
+            </div>
+          </div>
+        } @else {
+          <div class="empty-state">Cliquez sur un membre pour afficher sa fiche complète</div>
         }
+      </div>
+
+      <div class="data-card">
+        <div class="data-card__header">
+          <div>
+            <h2 class="data-card__title">Situation absences</h2>
+            <span class="data-card__subtitle">Validées et en attente</span>
+          </div>
+        </div>
+
+        <div class="absences-summary">
+          <div class="summary-pill summary-pill--green">
+            <span>Validées</span>
+            <strong>{{ stats().validated }}</strong>
+          </div>
+          <div class="summary-pill summary-pill--orange">
+            <span>En attente</span>
+            <strong>{{ stats().pending }}</strong>
+          </div>
+        </div>
+
+        <div class="team-mini-list">
+          @for (absence of teamAbsences().slice(0, 6); track absence.idAbcance) {
+            <div class="team-mini-item">
+              <div class="team-mini-item__content">
+                <span class="team-mini-item__name">{{ absence.user?.firstName }} {{ absence.user?.lastName }}</span>
+                <span class="team-mini-item__meta">{{ formatDate(absence.dateStart) }} → {{ formatDate(absence.dateEnd) }}</span>
+              </div>
+              <span class="team-item__status" [class]="'team-item__status--' + statusColors[absence.status || StatusAbsence.EN_ATTENTE]">
+                {{ absence.status }}
+              </span>
+            </div>
+          }
+        </div>
       </div>
     </div>
   </div>

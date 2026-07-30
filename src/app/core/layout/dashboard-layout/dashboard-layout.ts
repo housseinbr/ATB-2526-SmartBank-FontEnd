@@ -44,6 +44,18 @@ export class DashboardLayout {
   }
 
   private updateTitle(url: string) {
+    if (url.includes('/dashboard/admin/demandes')) {
+      this.routeTitle.set('Demandes');
+      return;
+    }
+    if (url.includes('/dashboard/admin/calendrier')) {
+      this.routeTitle.set('Calendrier');
+      return;
+    }
+    if (url.includes('/dashboard/admin/users')) {
+      this.routeTitle.set('Utilisateurs');
+      return;
+    }
     if (url.includes('/dashboard/superviseur/team')) {
       this.routeTitle.set('Mon équipe');
       return;
@@ -60,12 +72,12 @@ export class DashboardLayout {
       this.routeTitle.set('Mes absences');
       return;
     }
-    if (url.includes('/dashboard/admin')) {
-      this.routeTitle.set('Espace Admin');
-      return;
-    }
     if (url.includes('/dashboard/employe')) {
       this.routeTitle.set('Espace Employé');
+      return;
+    }
+    if (url.includes('/dashboard/admin')) {
+      this.routeTitle.set('Espace Admin');
       return;
     }
     this.routeTitle.set('Tableau de bord');
