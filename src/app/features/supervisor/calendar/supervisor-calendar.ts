@@ -87,16 +87,22 @@ export class SupervisorCalendar implements OnInit {
 
     this.loading.set(true);
     const isAdmin = currentUser.role === Role.ADMIN;
+    const isSupervisor = currentUser.role === Role.SUPERVISEUR;
 
     const source = isAdmin
       ? forkJoin({
           requests: this.absenceApi.getAll(),
           members: this.userService.getAllUsersWithSupervisors(),
         })
-      : forkJoin({
-          requests: this.absenceApi.getMine(),
-          members: this.userService.getSubordonnes(currentUser.id),
-        });
+      : isSupervisor
+        ? forkJoin({
+            requests: this.absenceApi.getTeamAbsences(),
+            members: this.userService.getSubordonnes(currentUser.id),
+          })
+        : forkJoin({
+            requests: this.absenceApi.getMine(),
+            members: this.userService.getSubordonnes(currentUser.id),
+          });
 
     source.subscribe({
       next: ({ requests, members }) => {

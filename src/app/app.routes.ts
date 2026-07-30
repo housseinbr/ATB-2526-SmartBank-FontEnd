@@ -22,6 +22,10 @@ export const routes: Routes = [
         children: [
           { path: '', redirectTo: 'users', pathMatch: 'full' },
           {
+            path: 'users/:id/donnees',
+            loadComponent: () => import('./features/profile-data/profile-data').then(m => m.ProfileData),
+          },
+          {
             path: 'users',
             loadComponent: () => import('./features/admin/dashboard/admin-dashboard').then(m => m.AdminDashboard),
           },
@@ -64,10 +68,19 @@ export const routes: Routes = [
         canActivate: [roleGuard(Role.EMPLOYE, Role.SUPERVISEUR)],
         loadComponent: () => import('./features/employee/absence/absence').then(m => m.MesAbsences),
       },
+      {
+        path: 'mes-donnees',
+        canActivate: [roleGuard(Role.EMPLOYE, Role.SUPERVISEUR)],
+        loadComponent: () => import('./features/profile-data/profile-data').then(m => m.ProfileData),
+      },
       // Profile - accessible to all authenticated users (inside layout)
       {
         path: 'profile',
         loadComponent: () => import('./features/profile/profile').then(m => m.Profile),
+      },
+      {
+        path: 'notifications',
+        loadComponent: () => import('./features/notifications/notifications').then(m => m.NotificationsPage),
       },
       { path: '', redirectTo: 'employe', pathMatch: 'full' },
 

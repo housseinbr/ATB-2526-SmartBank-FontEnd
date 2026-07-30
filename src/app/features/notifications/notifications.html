@@ -1,0 +1,83 @@
+<section class="notifications-page">
+  <header class="notifications-hero">
+    <div>
+      <p class="notifications-hero__eyebrow">Centre de notifications</p>
+      <h1 class="notifications-hero__title">Mes notifications</h1>
+      <p class="notifications-hero__subtitle">
+        Suivez les demandes, les mises à jour de profil et les affectations d’équipe.
+      </p>
+    </div>
+
+    <div class="notifications-hero__actions">
+      <button class="notifications-btn notifications-btn--secondary" type="button" (click)="reload()">
+        <app-icon name="trending-up" [size]="14" />
+        <span>Actualiser</span>
+      </button>
+      <button class="notifications-btn notifications-btn--primary" type="button" (click)="markAllAsRead()">
+        <app-icon name="check" [size]="14" />
+        <span>Tout marquer comme lu</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="notifications-summary">
+    <article class="summary-card">
+      <span class="summary-card__label">Total</span>
+      <strong class="summary-card__value">{{ stats().total }}</strong>
+    </article>
+    <article class="summary-card summary-card--accent">
+      <span class="summary-card__label">Non lues</span>
+      <strong class="summary-card__value">{{ stats().unread }}</strong>
+    </article>
+    <article class="summary-card">
+      <span class="summary-card__label">Lues</span>
+      <strong class="summary-card__value">{{ stats().read }}</strong>
+    </article>
+  </div>
+
+  <div class="notifications-filters">
+    <button type="button" class="filter-chip" [class.filter-chip--active]="filter() === 'ALL'" (click)="setFilter('ALL')">
+      Toutes
+    </button>
+    <button type="button" class="filter-chip" [class.filter-chip--active]="filter() === 'UNREAD'" (click)="setFilter('UNREAD')">
+      Non lues
+    </button>
+    <button type="button" class="filter-chip" [class.filter-chip--active]="filter() === 'READ'" (click)="setFilter('READ')">
+      Lues
+    </button>
+  </div>
+
+  <div class="notifications-list">
+    @if (loading()) {
+      <div class="notifications-empty">Chargement des notifications…</div>
+    } @else if (filteredNotifications().length === 0) {
+      <div class="notifications-empty">{{ emptyMessage }}</div>
+    } @else {
+      @for (notification of filteredNotifications(); track notification.id) {
+        <article class="notification-card" [class.notification-card--unread]="!notification.read">
+          <div class="notification-card__icon">
+            <app-icon [name]="notification.read ? 'check' : 'bell'" [size]="18" />
+          </div>
+
+          <div class="notification-card__content">
+            <div class="notification-card__head">
+              <h3 class="notification-card__title">{{ notification.subject }}</h3>
+              <span class="notification-card__date">{{ formatDate(notification.date) }}</span>
+            </div>
+            <p class="notification-card__text">{{ notification.text }}</p>
+            <div class="notification-card__meta">
+              <span class="notification-badge" [class.notification-badge--read]="notification.read">
+                {{ notification.read ? 'Lue' : 'Non lue' }}
+              </span>
+              @if (!notification.read) {
+                <button type="button" class="notification-link" (click)="markAsRead(notification)">
+                  Marquer comme lu
+                </button>
+              }
+            </div>
+          </div>
+        </article>
+      }
+    }
+  </div>
+</section>

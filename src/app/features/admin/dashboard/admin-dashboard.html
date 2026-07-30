@@ -348,6 +348,13 @@
                     </button>
                     <button
                       class="action-btn action-btn--edit"
+                      (click)="openUserData(user)"
+                      title="Voir toutes les données"
+                    >
+                      <app-icon name="file-text" [size]="14" />
+                    </button>
+                    <button
+                      class="action-btn action-btn--edit"
                       (click)="openEditModal(user)"
                       title="Modifier"
                     >

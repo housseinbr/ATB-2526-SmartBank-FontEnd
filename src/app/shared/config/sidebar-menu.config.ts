@@ -28,6 +28,7 @@ export const SIDEBAR_CONFIG: Record<Role, SidebarConfig> = {
       { label: 'Mon équipe', route: '/dashboard/superviseur/team', icon: 'users' },
       { label: 'Demandes', route: '/dashboard/superviseur/demandes', icon: 'inbox' },
       { label: 'Calendrier', route: '/dashboard/superviseur/calendrier', icon: 'calendar' },
+      { label: 'Mes données', route: '/dashboard/mes-donnees', icon: 'file-text' },
       { label: 'Mes absences', route: '/dashboard/absences', icon: 'calendar' },
     ],
   },
@@ -35,6 +36,7 @@ export const SIDEBAR_CONFIG: Record<Role, SidebarConfig> = {
     brandLabel: 'Espace Employé',
     items: [
       { label: 'Mes demandes', route: '/dashboard/employe', icon: 'inbox' },
+      { label: 'Mes données', route: '/dashboard/mes-donnees', icon: 'file-text' },
       { label: 'Mes absences', route: '/dashboard/absences', icon: 'calendar' },
       
     ],

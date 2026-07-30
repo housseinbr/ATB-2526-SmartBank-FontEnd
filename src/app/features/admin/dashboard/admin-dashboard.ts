@@ -10,6 +10,7 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { Icon } from '../../../shared/components/icon/icon';
 import { Toast } from '../../../shared/components/toast/toast';
 import { AlertComponent } from '../../../shared/components/alert/alert';
+import { Router } from '@angular/router';
 import { UserService } from '../../../core/services/user.service';
 import { UserResponse } from '../../../core/models/user-response';
 import { Role } from '../../../core/models/role';
@@ -24,6 +25,7 @@ import { finalize } from 'rxjs';
 })
 export class AdminDashboard implements OnInit {
   private userService = inject(UserService);
+  private router = inject(Router);
   private fb = inject(FormBuilder);
 
   readonly Role = Role;
@@ -410,6 +412,10 @@ private doAssignSupervisor(user: UserResponse, sup: UserResponse | null) {
   openViewModal(user: UserResponse) {
     this.selectedUser.set(user);
     this.showViewModal.set(true);
+  }
+
+  openUserData(user: UserResponse) {
+    this.router.navigate(['/dashboard/admin/users', user.id, 'donnees']);
   }
 
   openSupervisorModal(supervisor: UserResponse | null) {

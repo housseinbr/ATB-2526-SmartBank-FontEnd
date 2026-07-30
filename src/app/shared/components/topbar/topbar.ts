@@ -1,10 +1,12 @@
-import { Component, input, inject, ElementRef, HostListener } from '@angular/core';
+import { Component, input, inject, ElementRef, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Icon } from '../icon/icon';
 import { AuthService } from '../../../core/services/auth.service';
 import { Role } from '../../../core/models/role';
+import { NotificationService } from '../../../core/services/notification.service';
+import { NotificationItem } from '../../../core/models/notification';
 
 @Component({
   selector: 'app-topbar',
@@ -13,16 +15,18 @@ import { Role } from '../../../core/models/role';
   templateUrl: './topbar.html',
   styleUrl: './topbar.css',
 })
-export class Topbar {
+export class Topbar implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
   private elementRef = inject(ElementRef);
+  private notificationService = inject(NotificationService);
 
   pageTitle = input<string>('');
 
   user = this.authService.currentUser;
 
   isProfileMenuOpen = false;
+  isNotificationMenuOpen = false;
 
   get initials(): string {
     const u = this.user();
@@ -48,23 +52,61 @@ export class Topbar {
   }
 
   searchValue = '';
+  notifications = this.notificationService.unreadNotifications;
+  unreadCount = this.notificationService.unreadCount;
+
+  ngOnInit(): void {
+    this.refreshNotifications();
+  }
 
   onSearch(event: Event) {
     const value = (event.target as HTMLInputElement).value;
     this.searchValue = value;
   }
 
+  refreshNotifications(): void {
+    this.notificationService.loadUnread().subscribe();
+  }
+
+  openNotifications(): void {
+    this.isNotificationMenuOpen = !this.isNotificationMenuOpen;
+    if (this.isNotificationMenuOpen) {
+      this.isProfileMenuOpen = false;
+      this.refreshNotifications();
+    }
+  }
+
   toggleProfileMenu() {
     this.isProfileMenuOpen = !this.isProfileMenuOpen;
+    if (this.isProfileMenuOpen) {
+      this.isNotificationMenuOpen = false;
+    }
   }
 
   closeProfileMenu() {
     this.isProfileMenuOpen = false;
   }
 
+  closeNotificationMenu(): void {
+    this.isNotificationMenuOpen = false;
+  }
+
   goToProfile() {
     this.closeProfileMenu();
     this.router.navigate(['/dashboard/profile']);
+  }
+
+  goToNotifications(): void {
+    this.closeNotificationMenu();
+    this.router.navigate(['/dashboard/notifications']);
+  }
+
+  openNotification(notification: NotificationItem): void {
+    this.notificationService.markAsRead(notification.id).subscribe({
+      next: () => {
+        this.goToNotifications();
+      },
+    });
   }
 
   logout() {
@@ -75,8 +117,9 @@ export class Topbar {
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
-    if (this.isProfileMenuOpen && !this.elementRef.nativeElement.contains(event.target)) {
+    if ((this.isProfileMenuOpen || this.isNotificationMenuOpen) && !this.elementRef.nativeElement.contains(event.target)) {
       this.closeProfileMenu();
+      this.closeNotificationMenu();
     }
   }
 }

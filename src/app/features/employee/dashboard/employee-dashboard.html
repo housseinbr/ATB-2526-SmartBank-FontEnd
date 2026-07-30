@@ -1,46 +1,48 @@
 <div class="employee-dashboard">
   <h1 class="page-title">Tableau de bord</h1>
 
-  <!-- KPI Cards -->
   <div class="kpi-grid">
     <div class="kpi-card">
       <div class="kpi-card__icon kpi-card__icon--solde">
         <app-icon name="calendar" [size]="22" />
       </div>
       <div class="kpi-card__content">
-        <span class="kpi-card__value">{{ stats.soldeAnnuel }} <small>j</small></span>
-        <span class="kpi-card__label">Solde annuel</span>
-        <span class="kpi-card__sublabel">sur {{ stats.totalJours }} jours</span>
+        <span class="kpi-card__value">{{ stats().soldeActuel | number:'1.0-2' }} <small>j</small></span>
+        <span class="kpi-card__label">Solde disponible</span>
+        <span class="kpi-card__sublabel">Dernière mise à jour {{ latestHistoryLabel }}</span>
       </div>
     </div>
+
     <div class="kpi-card">
       <div class="kpi-card__icon kpi-card__icon--approved">
         <app-icon name="star" [size]="22" />
       </div>
       <div class="kpi-card__content">
-        <span class="kpi-card__value">{{ stats.approuvees }}</span>
-        <span class="kpi-card__label">Approuvées</span>
-        <span class="kpi-card__sublabel">cette année</span>
+        <span class="kpi-card__value">{{ stats().approuvees }}</span>
+        <span class="kpi-card__label">Validées</span>
+        <span class="kpi-card__sublabel">demandes traitées</span>
       </div>
     </div>
+
     <div class="kpi-card">
       <div class="kpi-card__icon kpi-card__icon--pending">
         <app-icon name="inbox" [size]="22" />
       </div>
       <div class="kpi-card__content">
-        <span class="kpi-card__value">{{ stats.enAttente }}</span>
+        <span class="kpi-card__value">{{ stats().enAttente }}</span>
         <span class="kpi-card__label">En attente</span>
-        <span class="kpi-card__sublabel">demande en cours</span>
+        <span class="kpi-card__sublabel">demandes en cours</span>
       </div>
     </div>
+
     <div class="kpi-card">
       <div class="kpi-card__icon kpi-card__icon--notif">
-        <app-icon name="x" [size]="22" />
+        <app-icon name="bell" [size]="22" />
       </div>
       <div class="kpi-card__content">
-        <span class="kpi-card__value">{{ stats.refusees }}</span>
-        <span class="kpi-card__label">Refusées</span>
-        <span class="kpi-card__sublabel">cette année</span>
+        <span class="kpi-card__value">{{ stats().notifications }}</span>
+        <span class="kpi-card__label">Notifications</span>
+        <span class="kpi-card__sublabel">non lues</span>
       </div>
     </div>
   </div>
@@ -50,7 +52,7 @@
       <div class="chart-card__header">
         <div>
           <h3 class="chart-card__title">Répartition statuts</h3>
-          <span class="chart-card__subtitle">Mes demandes de l’année</span>
+          <span class="chart-card__subtitle">Mes demandes validées, en attente et refusées</span>
         </div>
       </div>
       <div class="chart-card__body">
@@ -58,21 +60,25 @@
           <svg viewBox="0 0 36 36" class="pie-chart__svg">
             <circle class="pie-chart__base" cx="18" cy="18" r="15.9155" />
             @for (segment of statusChartData(); track segment.label; let i = $index) {
-              <circle
-                class="pie-chart__segment"
-                cx="18"
-                cy="18"
-                r="15.9155"
-                fill="none"
-                [attr.stroke]="segment.color"
-                stroke-width="3.25"
-                [attr.stroke-dasharray]="segment.value + ' ' + (statusTotal - segment.value)"
-                [attr.stroke-dashoffset]="getPieOffset(i)"
-              />
+              @if (segment.value > 0) {
+                <circle
+                  class="pie-chart__segment"
+                  cx="18"
+                  cy="18"
+                  r="15.9155"
+                  fill="none"
+                  [attr.stroke]="segment.color"
+                  stroke-width="3.25"
+                  stroke-linecap="round"
+                  [attr.stroke-dasharray]="getDonutDasharray(segment.value)"
+                  [attr.stroke-dashoffset]="getPieOffset(i)"
+                  transform="rotate(-90 18 18)"
+                />
+              }
             }
           </svg>
           <div class="pie-chart__center">
-            <span class="pie-chart__total">{{ stats.approuvees + stats.enAttente + stats.refusees }}</span>
+            <span class="pie-chart__total">{{ stats().totalDemandes }}</span>
             <span class="pie-chart__label">Demandes</span>
           </div>
         </div>
@@ -91,57 +97,40 @@
   </div>
 
   <div class="dashboard-grid">
-    <!-- Soldes -->
     <div class="data-card">
       <div class="data-card__header">
         <div>
-          <h2 class="data-card__title">Mes soldes</h2>
-          <span class="data-card__subtitle">Situation au 15 Jan 2025</span>
+          <h2 class="data-card__title">Mes soldes réels</h2>
+          <span class="data-card__subtitle">Basé sur les demandes validées</span>
         </div>
         <a class="data-card__link">Voir détail →</a>
       </div>
       <div class="soldes-list">
-        <div class="solde-item">
-          <div class="solde-item__info">
-            <span class="solde-item__label">Congés annuels</span>
-            <span class="solde-item__value">{{ soldes.conges.used }}/{{ soldes.conges.total }}j</span>
-          </div>
-          <div class="solde-bar">
-            <div class="solde-bar__track">
-              <div class="solde-bar__fill" [style.width.%]="(soldes.conges.used / soldes.conges.total) * 100"></div>
+        @for (item of leaveBreakdown(); track item.label) {
+          <div class="solde-item">
+            <div class="solde-item__info">
+              <span class="solde-item__label">{{ item.label }}</span>
+              <span class="solde-item__value">{{ item.used | number:'1.0-1' }} j utilisés</span>
+            </div>
+            <div class="solde-bar">
+              <div class="solde-bar__track">
+                <div
+                  class="solde-bar__fill"
+                  [class.solde-bar__fill--dark]="item.color === 'dark'"
+                  [class.solde-bar__fill--gray]="item.color === 'gray'"
+                  [style.width.%]="item.share"
+                ></div>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="solde-item">
-          <div class="solde-item__info">
-            <span class="solde-item__label">Congés maladie</span>
-            <span class="solde-item__value">{{ soldes.maladie.used }}/{{ soldes.maladie.total }}j</span>
-          </div>
-          <div class="solde-bar">
-            <div class="solde-bar__track">
-              <div class="solde-bar__fill solde-bar__fill--dark" [style.width.%]="(soldes.maladie.used / soldes.maladie.total) * 100"></div>
-            </div>
-          </div>
-        </div>
-        <div class="solde-item">
-          <div class="solde-item__info">
-            <span class="solde-item__label">Congés exceptionnels</span>
-            <span class="solde-item__value">{{ soldes.exceptionnel.used }}/{{ soldes.exceptionnel.total }}j</span>
-          </div>
-          <div class="solde-bar">
-            <div class="solde-bar__track">
-              <div class="solde-bar__fill solde-bar__fill--gray" [style.width.%]="(soldes.exceptionnel.used / soldes.exceptionnel.total) * 100"></div>
-            </div>
-          </div>
-        </div>
+        }
       </div>
     </div>
 
-    <!-- Absences History -->
     <div class="data-card">
       <div class="data-card__header">
         <div>
-          <h2 class="data-card__title">Évolution des soldes</h2>
+          <h2 class="data-card__title">Évolution du solde</h2>
           <span class="data-card__subtitle">6 derniers mois</span>
         </div>
       </div>
@@ -170,7 +159,7 @@
           @for (point of linePoints(); track point.month) {
             <g>
               <circle class="line-chart__point" [attr.cx]="point.x" [attr.cy]="point.y" r="3.5" />
-              <text class="line-chart__tooltip" [attr.x]="point.x" [attr.y]="point.y - 10">{{ point.value }}</text>
+              <text class="line-chart__tooltip" [attr.x]="point.x" [attr.y]="point.y - 10">{{ point.value | number:'1.0-2' }}</text>
             </g>
           }
         </svg>
@@ -184,7 +173,6 @@
     </div>
   </div>
 
-  <!-- Recent Requests -->
   <div class="data-card">
     <div class="data-card__header">
       <h2 class="data-card__title">Demandes récentes</h2>
@@ -194,7 +182,7 @@
       </button>
     </div>
     <div class="request-list">
-      @for (req of recentRequests; track req.ref) {
+      @for (req of recentRequests(); track req.ref) {
         <div class="request-item">
           <div class="request-item__indicator" [class]="'request-item__indicator--' + req.statusColor"></div>
           <div class="request-item__content">
@@ -208,19 +196,19 @@
     </div>
   </div>
 
-  <!-- Notifications -->
   <div class="data-card">
     <div class="data-card__header">
       <h2 class="data-card__title">Notifications récentes</h2>
       <a class="data-card__link">Toutes voir</a>
     </div>
     <div class="notification-list">
-      @for (notif of notifications; track notif.text) {
-        <div class="notification-item" [class.notification-item--unread]="notif.unread">
-          <div class="notification-item__dot" [class.notification-item__dot--unread]="notif.unread"></div>
+      @for (notif of recentNotifications(); track notif.id) {
+        <div class="notification-item" [class.notification-item--unread]="!notif.read">
+          <div class="notification-item__dot" [class.notification-item__dot--unread]="!notif.read"></div>
           <div class="notification-item__content">
-            <p class="notification-item__text">{{ notif.text }}</p>
-            <span class="notification-item__time">{{ notif.time }}</span>
+            <p class="notification-item__text">{{ notif.subject }}</p>
+            <span class="notification-item__time">{{ notif.text }}</span>
+            <span class="notification-item__time">{{ notif.date | date:'dd MMM yyyy' }}</span>
           </div>
         </div>
       }

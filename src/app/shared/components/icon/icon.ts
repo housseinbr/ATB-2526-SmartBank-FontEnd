@@ -34,7 +34,8 @@ export type IconName =
   | 'upload'
   | 'lock'
   | 'mail'
-  | 'plus';
+  | 'plus'
+  | 'file-text';
 
 @Component({
   selector: 'app-icon',

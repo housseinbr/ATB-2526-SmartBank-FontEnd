@@ -4,6 +4,7 @@ import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { Sidebar } from '../../../shared/components/sidebar/sidebar';
 import { Topbar } from '../../../shared/components/topbar/topbar';
 import { AuthService } from '../../services/auth.service';
+import { NotificationService } from '../../services/notification.service';
 import { Role } from '../../models/role';
 import { filter } from 'rxjs';
 
@@ -16,6 +17,7 @@ import { filter } from 'rxjs';
 })
 export class DashboardLayout {
   private authService = inject(AuthService);
+  private notificationService = inject(NotificationService);
   private router = inject(Router);
 
   isSidebarCollapsed = signal(false);
@@ -25,7 +27,10 @@ export class DashboardLayout {
   
   // ← AJOUTE CE GETTER
   get badges() {
-    return this.authService.badges;
+    return {
+      ...this.authService.badges,
+      notifications: this.notificationService.unreadCount(),
+    };
   }
   
   pageTitle = computed(() => {
@@ -52,6 +57,10 @@ export class DashboardLayout {
       this.routeTitle.set('Calendrier');
       return;
     }
+    if (url.includes('/dashboard/admin/users/') && url.includes('/donnees')) {
+      this.routeTitle.set('Données utilisateur');
+      return;
+    }
     if (url.includes('/dashboard/admin/users')) {
       this.routeTitle.set('Utilisateurs');
       return;
@@ -70,6 +79,10 @@ export class DashboardLayout {
     }
     if (url.includes('/dashboard/absences')) {
       this.routeTitle.set('Mes absences');
+      return;
+    }
+    if (url.includes('/dashboard/mes-donnees')) {
+      this.routeTitle.set('Mes données');
       return;
     }
     if (url.includes('/dashboard/employe')) {
