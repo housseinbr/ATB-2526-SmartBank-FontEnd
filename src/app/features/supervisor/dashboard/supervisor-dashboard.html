@@ -1,57 +1,77 @@
 <app-toast [message]="toastMessage()" [type]="toastType()" [visible]="toastVisible()" />
 
 <div class="supervisor-dashboard">
-  <h1 class="page-title">Mon équipe</h1>
-  <p class="page-subtitle">Vue d’ensemble de vos collaborateurs et de leurs absences</p>
+  <section class="hero-card">
+    <div class="hero-card__content">
+      <p class="eyebrow">Espace équipe</p>
+      <h1 class="page-title">Mon équipe</h1>
+      <p class="hero-card__subtitle">Vue d'ensemble de vos collaborateurs et de leurs absences.</p>
+    </div>
 
-  <div class="kpi-grid">
-    <div class="kpi-card">
-      <div class="kpi-card__icon kpi-card__icon--team">
-        <app-icon name="users" [size]="22" />
-      </div>
-      <div class="kpi-card__content">
-        <span class="kpi-card__value">{{ stats().members }}</span>
-        <span class="kpi-card__label">Membres équipe</span>
-        <span class="kpi-card__sublabel">collaborateurs suivis</span>
-      </div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-card__icon kpi-card__icon--approved">
-        <app-icon name="check" [size]="22" />
-      </div>
-      <div class="kpi-card__content">
-        <span class="kpi-card__value">{{ stats().validated }}</span>
-        <span class="kpi-card__label">Absences validées</span>
-        <span class="kpi-card__sublabel">sur l’équipe</span>
-      </div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-card__icon kpi-card__icon--pending">
-        <app-icon name="inbox" [size]="22" />
-      </div>
-      <div class="kpi-card__content">
-        <span class="kpi-card__value">{{ stats().pending }}</span>
-        <span class="kpi-card__label">En attente</span>
-        <span class="kpi-card__sublabel">demandes à traiter</span>
-      </div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-card__icon kpi-card__icon--notif">
-        <app-icon name="bell" [size]="22" />
-      </div>
-      <div class="kpi-card__content">
-        <span class="kpi-card__value">{{ stats().employees + stats().supervisors }}</span>
-        <span class="kpi-card__label">Profils actifs</span>
-        <span class="kpi-card__sublabel">équipe visible</span>
-      </div>
-    </div>
-  </div>
+    <div class="hero-card__balance">
+      <span class="hero-card__label">Équipe suivie</span>
+      <strong class="hero-card__value">{{ stats().members }}</strong>
+      <span class="hero-card__hint">collaborateurs visibles</span>
 
-  <div class="dashboard-grid">
+      <div class="balance-meter" aria-hidden="true">
+        <div class="balance-meter__bar">
+          <div class="balance-meter__fill" [style.width.%]="memberProgress()"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="summary-grid">
+    <article class="summary-card summary-card--slate">
+      <div class="summary-card__icon">
+        <app-icon name="users" [size]="18" />
+      </div>
+      <div class="summary-card__content">
+        <span class="summary-card__label">Membres équipe</span>
+        <strong class="summary-card__value">{{ stats().members }}</strong>
+        <span class="summary-card__hint">collaborateurs suivis</span>
+      </div>
+    </article>
+
+    <article class="summary-card summary-card--green">
+      <div class="summary-card__icon">
+        <app-icon name="check" [size]="18" />
+      </div>
+      <div class="summary-card__content">
+        <span class="summary-card__label">Absences validées</span>
+        <strong class="summary-card__value">{{ stats().validated }}</strong>
+        <span class="summary-card__hint">sur l'équipe</span>
+      </div>
+    </article>
+
+    <article class="summary-card summary-card--amber">
+      <div class="summary-card__icon">
+        <app-icon name="inbox" [size]="18" />
+      </div>
+      <div class="summary-card__content">
+        <span class="summary-card__label">En attente</span>
+        <strong class="summary-card__value">{{ stats().pending }}</strong>
+        <span class="summary-card__hint">demandes à traiter</span>
+      </div>
+    </article>
+
+    <article class="summary-card summary-card--rose">
+      <div class="summary-card__icon">
+        <app-icon name="bell" [size]="18" />
+      </div>
+      <div class="summary-card__content">
+        <span class="summary-card__label">Profils actifs</span>
+        <strong class="summary-card__value">{{ stats().employees + stats().supervisors }}</strong>
+        <span class="summary-card__hint">équipe visible</span>
+      </div>
+    </article>
+  </section>
+
+  <section class="content-grid">
     <div class="data-card">
       <div class="data-card__header">
         <div>
-          <h2 class="data-card__title">Membres de l’équipe</h2>
+          <h2 class="data-card__title">Membres de l'équipe</h2>
           <span class="data-card__subtitle">{{ teamMembers().length }} collaborateur(s)</span>
         </div>
       </div>
@@ -150,7 +170,7 @@
             <span>Validées</span>
             <strong>{{ stats().validated }}</strong>
           </div>
-          <div class="summary-pill summary-pill--orange">
+          <div class="summary-pill summary-pill--amber">
             <span>En attente</span>
             <strong>{{ stats().pending }}</strong>
           </div>
@@ -171,5 +191,5 @@
         </div>
       </div>
     </div>
-  </div>
+  </section>
 </div>

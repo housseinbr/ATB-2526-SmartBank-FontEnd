@@ -373,6 +373,13 @@
                     </button>
                     <button
                       class="action-btn action-btn--view"
+                      (click)="openCompetances(user)"
+                      title="Compétences"
+                    >
+                      <app-icon name="award" [size]="14" />
+                    </button>
+                    <button
+                      class="action-btn action-btn--view"
                       (click)="exportUserProfilePdf(user)"
                       title="Télécharger le profil en PDF"
                     >

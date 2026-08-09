@@ -1,0 +1,276 @@
+<div class="requests-page">
+  <app-toast [message]="toastMessage()" [type]="toastType()" [visible]="toastVisible()" />
+  <app-alert
+    [visible]="alertVisible()"
+    [title]="alertTitle()"
+    [message]="alertMessage()"
+    type="warning"
+    confirmText="Confirmer"
+    cancelText="Annuler"
+    (confirmed)="onAlertConfirm()"
+    (cancelled)="onAlertCancel()"
+  />
+
+  <section class="hero-card">
+    <div class="hero-card__content">
+      <p class="eyebrow">Demandes de l'equipe</p>
+      <h1 class="page-title">Valider ou refuser les demandes de formation</h1>
+      <p class="hero-card__subtitle">Traitement des demandes en attente et suivi global.</p>
+    </div>
+
+    <div class="hero-card__balance">
+      <span class="hero-card__label">Demandes a traiter</span>
+      <strong class="hero-card__value">{{ stats().pending }}</strong>
+      <span class="hero-card__hint">en attente maintenant</span>
+
+      <div class="balance-meter" aria-hidden="true">
+        <div class="balance-meter__bar">
+          <div
+            class="balance-meter__fill"
+            [style.width.%]="requests().length ? (stats().pending / requests().length) * 100 : 0"
+          ></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="summary-grid">
+    <article class="summary-card summary-card--slate">
+      <div class="summary-card__icon">
+        <app-icon name="file-text" [size]="18" />
+      </div>
+      <div class="summary-card__content">
+        <span class="summary-card__label">Total</span>
+        <strong class="summary-card__value">{{ stats().total }}</strong>
+        <span class="summary-card__hint">demandes suivies</span>
+      </div>
+    </article>
+
+    <article class="summary-card summary-card--amber">
+      <div class="summary-card__icon">
+        <app-icon name="inbox" [size]="18" />
+      </div>
+      <div class="summary-card__content">
+        <span class="summary-card__label">En attente</span>
+        <strong class="summary-card__value">{{ stats().pending }}</strong>
+        <span class="summary-card__hint">a traiter</span>
+      </div>
+    </article>
+
+    <article class="summary-card summary-card--green">
+      <div class="summary-card__icon">
+        <app-icon name="check" [size]="18" />
+      </div>
+      <div class="summary-card__content">
+        <span class="summary-card__label">Validees</span>
+        <strong class="summary-card__value">{{ stats().valid }}</strong>
+        <span class="summary-card__hint">approuvees</span>
+      </div>
+    </article>
+
+    <article class="summary-card summary-card--rose">
+      <div class="summary-card__icon">
+        <app-icon name="x" [size]="18" />
+      </div>
+      <div class="summary-card__content">
+        <span class="summary-card__label">Refusees</span>
+        <strong class="summary-card__value">{{ stats().refused }}</strong>
+        <span class="summary-card__hint">traitees</span>
+      </div>
+    </article>
+  </section>
+
+  <section class="content-grid">
+    <div class="data-card">
+      <div class="data-card__header">
+        <div>
+          <h2 class="data-card__title">Tableau des demandes</h2>
+          <span class="data-card__subtitle">{{ filteredRequests().length }} demande(s)</span>
+        </div>
+
+        <div class="filter-row">
+          <button
+            class="filter-chip"
+            [class.filter-chip--active]="activeFilter() === 'all'"
+            type="button"
+            (click)="setFilter('all')"
+          >
+            Toutes
+          </button>
+          <button
+            class="filter-chip"
+            [class.filter-chip--active]="activeFilter() === Status.EN_ATTENTE"
+            type="button"
+            (click)="setFilter(Status.EN_ATTENTE)"
+          >
+            En attente
+          </button>
+          <button
+            class="filter-chip"
+            [class.filter-chip--active]="activeFilter() === Status.VALIDE"
+            type="button"
+            (click)="setFilter(Status.VALIDE)"
+          >
+            Validees
+          </button>
+          <button
+            class="filter-chip"
+            [class.filter-chip--active]="activeFilter() === Status.REFUSE"
+            type="button"
+            (click)="setFilter(Status.REFUSE)"
+          >
+            Refusees
+          </button>
+        </div>
+      </div>
+
+      @if (loading()) {
+        <div class="empty-state">Chargement...</div>
+      } @else if (filteredRequests().length === 0) {
+        <div class="empty-state">Aucune demande a afficher.</div>
+      } @else {
+        <div class="table-wrapper">
+          <table class="requests-table">
+            <thead>
+              <tr>
+                <th>Collaborateur</th>
+                <th>Formation</th>
+                <th>Detail</th>
+                <th>Statut</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of filteredRequests(); track item.idDemandeFormation) {
+                <tr>
+                  <td>
+                    <div class="user-cell">
+                      <div class="user-cell__avatar">{{ getInitials(item.user.firstName, item.user.lastName) }}</div>
+                      <div class="user-cell__info">
+                        <span class="user-cell__name">{{ item.user.firstName }} {{ item.user.lastName }}</span>
+                        <span class="user-cell__sub">{{ item.user.role }} - Solde {{ item.user.solde | number:'1.0-0' }}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="request-main">
+                      <strong>{{ item.formation.title }}</strong>
+                      <span>{{ item.formation.domain }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="request-detail">
+                      <span>{{ item.formation.theme }}</span>
+                      <span>{{ item.formation.duree }} {{ item.formation.unite }}</span>
+                      <span>{{ dateLabel(item.date) }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span
+                      class="status-badge"
+                      [class.status-badge--green]="item.status === Status.VALIDE"
+                      [class.status-badge--orange]="item.status === Status.EN_ATTENTE"
+                      [class.status-badge--red]="item.status === Status.REFUSE"
+                    >
+                      {{ labels[item.status] }}
+                    </span>
+                  </td>
+                  <td>
+                    @if (isPending(item)) {
+                      <div class="actions">
+                        <button class="action-btn action-btn--success" type="button" (click)="decide(item, Status.VALIDE)">
+                          Valider
+                        </button>
+                        <button class="action-btn action-btn--danger" type="button" (click)="decide(item, Status.REFUSE)">
+                          Refuser
+                        </button>
+                      </div>
+                    } @else {
+                      <span class="actions__done">Traite</span>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+
+    <div class="side-stack">
+      <div class="data-card">
+        <div class="data-card__header">
+          <div>
+            <h2 class="data-card__title">Filtre rapide</h2>
+            <span class="data-card__subtitle">Choisir une vue simple</span>
+          </div>
+        </div>
+
+        <div class="filter-panel">
+          <button class="filter-panel__item" [class.filter-panel__item--active]="activeFilter() === 'all'" type="button" (click)="setFilter('all')">
+            Toutes les demandes
+          </button>
+          <button
+            class="filter-panel__item"
+            [class.filter-panel__item--active]="activeFilter() === Status.EN_ATTENTE"
+            type="button"
+            (click)="setFilter(Status.EN_ATTENTE)"
+          >
+            Demandes en attente
+          </button>
+          <button
+            class="filter-panel__item"
+            [class.filter-panel__item--active]="activeFilter() === Status.VALIDE"
+            type="button"
+            (click)="setFilter(Status.VALIDE)"
+          >
+            Demandes validees
+          </button>
+          <button
+            class="filter-panel__item"
+            [class.filter-panel__item--active]="activeFilter() === Status.REFUSE"
+            type="button"
+            (click)="setFilter(Status.REFUSE)"
+          >
+            Demandes refusees
+          </button>
+        </div>
+      </div>
+
+      <div class="data-card">
+        <div class="data-card__header">
+          <div>
+            <h2 class="data-card__title">Lecture rapide</h2>
+            <span class="data-card__subtitle">Etat du suivi</span>
+          </div>
+        </div>
+
+        <div class="mini-grid">
+          <div class="mini-card">
+            <div class="mini-card__left">
+              <span class="mini-card__title">En attente</span>
+              <span class="mini-card__meta">Demandes a traiter</span>
+            </div>
+            <strong>{{ stats().pending }}</strong>
+          </div>
+
+          <div class="mini-card">
+            <div class="mini-card__left">
+              <span class="mini-card__title">Validees</span>
+              <span class="mini-card__meta">Acceptees par le superviseur</span>
+            </div>
+            <strong>{{ stats().valid }}</strong>
+          </div>
+
+          <div class="mini-card">
+            <div class="mini-card__left">
+              <span class="mini-card__title">Refusees</span>
+              <span class="mini-card__meta">Demandes fermees</span>
+            </div>
+            <strong>{{ stats().refused }}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

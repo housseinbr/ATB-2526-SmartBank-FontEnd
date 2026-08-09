@@ -59,7 +59,7 @@ export class MesAbsences implements OnInit {
       label: 'Solde disponible',
       value: this.balance.toFixed(2),
       hint: 'jours restants',
-      tone: 'blue',
+      tone: 'slate',
     },
     {
       label: 'Demandes totales',

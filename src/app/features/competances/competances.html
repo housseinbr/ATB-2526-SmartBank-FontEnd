@@ -1,0 +1,49 @@
+<div class="competence-page">
+  <app-toast [message]="toastMessage()" [type]="toastType()" [visible]="toastVisible()" />
+
+  <section class="hero">
+    <div>
+      <p class="eyebrow">Competences</p>
+      <h1>{{ user()?.firstName }} {{ user()?.lastName }}</h1>
+      <p class="lead">
+        {{ isAdminView() ? 'Vue admin des competences du collaborateur.' : 'Ton profil de competences personnel.' }}
+      </p>
+    </div>
+    <div class="hero__stats">
+      <div><strong>{{ summary().total }}</strong><span>competences</span></div>
+      <div><strong>{{ summary().domains }}</strong><span>domaines</span></div>
+      <div><strong>{{ summary().formations }}</strong><span>formations</span></div>
+    </div>
+  </section>
+
+  @if (loading()) {
+    <div class="empty-state">Chargement...</div>
+  } @else if (!competances().length) {
+    <div class="empty-state">Aucune competence disponible.</div>
+  } @else {
+    <section class="grid">
+      @for (item of competances(); track item.idCompetance) {
+        <article class="card">
+          <div class="card__head">
+            <div>
+              <p class="tag">{{ item.formation.domain }}</p>
+              <h3>{{ item.formation.title }}</h3>
+            </div>
+            <span class="date">{{ item.formation.duree }} {{ item.formation.unite }}</span>
+          </div>
+          <p>{{ item.formation.theme }}</p>
+          <div class="meta">
+            <span>{{ item.formation.offreFormation }}</span>
+            <span>{{ item.formation.lieu }}</span>
+          </div>
+          @if (isAdminView()) {
+            <button class="danger-btn" type="button" (click)="delete(item)">
+              <app-icon name="trash" [size]="14" />
+              Supprimer
+            </button>
+          }
+        </article>
+      }
+    </section>
+  }
+</div>

@@ -1,5 +1,5 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { forkJoin } from 'rxjs';
 import { AbsenceApiService } from '../../../core/services/absence.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -15,7 +15,7 @@ import {
 } from '../../../core/models/absence';
 import { UserResponse } from '../../../core/models/user-response';
 
-type CalendarMode = 'month' | 'week' | 'year';
+type CalendarMode = 'month' | 'detail' | 'year';
 
 interface CalendarDayCell {
   date: Date;
@@ -25,11 +25,33 @@ interface CalendarDayCell {
   items: Absence[];
 }
 
-interface CalendarMonthCard {
+interface CalendarDetailCell {
+  date: Date;
+  dayNumber: number;
+  items: Absence[];
+  primary?: Absence;
+}
+
+interface CalendarMemberRow {
+  member: UserResponse;
+  cells: CalendarDetailCell[];
+  total: number;
+}
+
+interface CalendarYearCell {
+  date: Date;
+  dayNumber: number;
+  inCurrentPeriod: boolean;
+  items: Absence[];
+  primary?: Absence;
+}
+
+interface CalendarYearCard {
   monthIndex: number;
   label: string;
   count: number;
   items: Absence[];
+  days: CalendarYearCell[];
 }
 
 @Component({
@@ -106,7 +128,7 @@ export class SupervisorCalendar implements OnInit {
 
     source.subscribe({
       next: ({ requests, members }) => {
-        this.requests.set(this.mergeAndSort(requests, []));
+        this.requests.set(this.mergeAndSort(requests));
         this.teamMembers.set(members);
         this.loading.set(false);
       },
@@ -116,8 +138,8 @@ export class SupervisorCalendar implements OnInit {
 
   readonly modeLabel = computed(() => {
     switch (this.mode()) {
-      case 'week':
-        return 'Vue semaine';
+      case 'detail':
+        return 'Vue détaillée';
       case 'year':
         return 'Vue annuelle';
       default:
@@ -129,12 +151,6 @@ export class SupervisorCalendar implements OnInit {
     const date = this.selectedDate();
     if (this.mode() === 'year') {
       return `${date.getFullYear()}`;
-    }
-
-    if (this.mode() === 'week') {
-      const start = this.getWeekStart(date);
-      const end = this.addDays(start, 6);
-      return `${start.getDate()} ${this.monthNames[start.getMonth()]} ${start.getFullYear()} → ${end.getDate()} ${this.monthNames[end.getMonth()]} ${end.getFullYear()}`;
     }
 
     return `${this.monthNames[date.getMonth()]} ${date.getFullYear()}`;
@@ -160,8 +176,10 @@ export class SupervisorCalendar implements OnInit {
   });
 
   readonly monthCells = computed<CalendarDayCell[]>(() => this.buildMonthCells());
-  readonly weekCells = computed<CalendarDayCell[]>(() => this.buildWeekCells());
-  readonly yearCards = computed<CalendarMonthCard[]>(() => this.buildYearCards());
+  readonly detailRows = computed<CalendarMemberRow[]>(() => this.buildDetailRows());
+  readonly yearCards = computed<CalendarYearCard[]>(() => this.buildYearCards());
+  readonly selectedMonthDays = computed(() => this.buildMonthDays());
+  readonly yearDayNumbers = Array.from({ length: 31 }, (_, index) => index + 1);
 
   readonly selectedDayItems = computed(() => {
     const selectedDay = this.stripTime(this.selectedDate()).getTime();
@@ -194,8 +212,6 @@ export class SupervisorCalendar implements OnInit {
     const current = new Date(this.selectedDate());
     if (this.mode() === 'year') {
       current.setFullYear(current.getFullYear() - 1);
-    } else if (this.mode() === 'week') {
-      current.setDate(current.getDate() - 7);
     } else {
       current.setMonth(current.getMonth() - 1);
     }
@@ -206,8 +222,6 @@ export class SupervisorCalendar implements OnInit {
     const current = new Date(this.selectedDate());
     if (this.mode() === 'year') {
       current.setFullYear(current.getFullYear() + 1);
-    } else if (this.mode() === 'week') {
-      current.setDate(current.getDate() + 7);
     } else {
       current.setMonth(current.getMonth() + 1);
     }
@@ -283,6 +297,12 @@ export class SupervisorCalendar implements OnInit {
     }
   }
 
+  private buildMonthDays(): Date[] {
+    const current = this.selectedDate();
+    const totalDays = new Date(current.getFullYear(), current.getMonth() + 1, 0).getDate();
+    return Array.from({ length: totalDays }, (_, index) => new Date(current.getFullYear(), current.getMonth(), index + 1));
+  }
+
   private buildMonthCells(): CalendarDayCell[] {
     const baseDate = new Date(this.selectedDate());
     const firstDay = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
@@ -304,35 +324,62 @@ export class SupervisorCalendar implements OnInit {
     return cells;
   }
 
-  private buildWeekCells(): CalendarDayCell[] {
-    const start = this.getWeekStart(this.selectedDate());
-    return Array.from({ length: 7 }, (_, index) => {
-      const current = this.addDays(start, index);
+  private buildDetailRows(): CalendarMemberRow[] {
+    const monthDays = this.selectedMonthDays();
+    const members = this.selectedMemberId()
+      ? this.teamMembers().filter((member) => member.id === this.selectedMemberId())
+      : this.teamMembers();
+
+    return members.map((member) => {
+      const memberRequests = this.filteredRequests().filter((request) => request.user?.id === member.id);
+      const cells = monthDays.map((date) => {
+        const items = memberRequests.filter((request) => this.rangeIntersectsDay(date, request));
+        return {
+          date,
+          dayNumber: date.getDate(),
+          items,
+          primary: items[0],
+        };
+      });
+
       return {
-        date: current,
-        dayNumber: current.getDate(),
-        dayName: this.dayNames[index],
-        inCurrentPeriod: true,
-        items: this.dayItems(current),
+        member,
+        cells,
+        total: memberRequests.length,
       };
     });
   }
 
-  private buildYearCards(): CalendarMonthCard[] {
+  private buildYearCards(): CalendarYearCard[] {
     const year = this.selectedDate().getFullYear();
     return Array.from({ length: 12 }, (_, monthIndex) => {
       const items = this.filteredRequests().filter((request) => this.rangeIntersectsMonth(request, year, monthIndex));
+      const totalDays = new Date(year, monthIndex + 1, 0).getDate();
+      const days = Array.from({ length: 31 }, (_, dayIndex) => {
+        const date = new Date(year, monthIndex, dayIndex + 1);
+        const inCurrentPeriod = dayIndex < totalDays;
+        const itemsForDay = inCurrentPeriod ? this.dayItems(date) : [];
+        return {
+          date,
+          dayNumber: dayIndex + 1,
+          inCurrentPeriod,
+          items: itemsForDay,
+          primary: itemsForDay[0],
+        };
+      });
+
       return {
         monthIndex,
         label: this.monthNames[monthIndex],
         count: items.length,
         items: items.slice(0, 3),
+        days,
       };
     });
   }
 
-  private mergeAndSort(requests: Absence[], extra: Absence[]): Absence[] {
-    return [...requests, ...extra].sort((left, right) => {
+  private mergeAndSort(requests: Absence[]): Absence[] {
+    return [...requests].sort((left, right) => {
       const leftDate = `${left.dateStart}${left.dateEnd}`;
       const rightDate = `${right.dateStart}${right.dateEnd}`;
       return leftDate.localeCompare(rightDate);
@@ -346,18 +393,16 @@ export class SupervisorCalendar implements OnInit {
     return dayStart >= rangeStart && dayStart <= rangeEnd;
   }
 
+  private rangeIntersectsDay(date: Date, request: Absence): boolean {
+    return this.dateInRange(date, request);
+  }
+
   private rangeIntersectsMonth(request: Absence, year: number, monthIndex: number): boolean {
     const rangeStart = new Date(request.dateStart);
     const rangeEnd = new Date(request.dateEnd);
     const monthStart = new Date(year, monthIndex, 1);
     const monthEnd = new Date(year, monthIndex + 1, 0);
     return rangeStart <= monthEnd && rangeEnd >= monthStart;
-  }
-
-  private getWeekStart(date: Date): Date {
-    const current = new Date(date);
-    const mondayBased = this.getMondayBasedDay(current);
-    return this.addDays(current, -mondayBased);
   }
 
   private getMondayBasedDay(date: Date): number {

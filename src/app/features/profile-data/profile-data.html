@@ -26,6 +26,7 @@
   }
 
   @if (user() && !loading()) {
+    <!-- HERO -->
     <section class="hero-card">
       <div class="hero-card__identity">
         <div class="hero-avatar">
@@ -44,7 +45,7 @@
       <div class="hero-card__stats">
         <div class="mini-stat">
           <app-icon name="file-text" [size]="16" />
-          <span>{{ sectionsFilled() }}</span>
+          <span>{{ sectionsFilled() }}/6</span>
           <small>Sections complétées</small>
         </div>
         <div class="mini-stat">
@@ -65,19 +66,41 @@
       </div>
     </section>
 
-    <div class="content-grid">
-      <section class="cards-column">
-        <article class="section-card">
-          <div class="section-card__header">
-            <div>
-              <h2><app-icon name="search" [size]="16" /> Adresse</h2>
-              <p>Adresse principale, ville et justificatif.</p>
-            </div>
-            <button class="btn btn--ghost" [disabled]="readOnly()" (click)="openCreate('addresses')">
-              <app-icon name="plus" [size]="14" /> Ajouter
-            </button>
-          </div>
-          <div class="section-card__body">
+    <!-- TABS -->
+    <nav class="tab-bar">
+      @for (tab of sectionTabs; track tab.key) {
+        <button
+          class="tab-btn"
+          [class.active]="activeTab() === tab.key"
+          (click)="setActiveTab(tab.key)"
+        >
+          <app-icon [name]="tab.icon" [size]="16" />
+          <span>{{ tab.label }}</span>
+          @if (tabCount(tab.key) > 0) {
+            <span class="tab-badge">{{ tabCount(tab.key) }}</span>
+          }
+        </button>
+      }
+    </nav>
+
+    <!-- ACTIVE SECTION PANEL -->
+    <section class="active-panel">
+      <div class="active-panel__header">
+        <div>
+          <h2>{{ getSectionTitle(activeTab()) }}</h2>
+          <p>{{ getSectionDescription(activeTab()) }}</p>
+        </div>
+        @if (!readOnly()) {
+          <button class="btn btn--primary" (click)="openCreate(activeTab())">
+            <app-icon name="plus" [size]="14" />
+            {{ (activeTab() === 'bankAccount' || activeTab() === 'familySituation') && hasData(activeTab()) ? 'Modifier' : 'Ajouter' }}
+          </button>
+        }
+      </div>
+
+      <div class="active-panel__body">
+        @switch (activeTab()) {
+          @case ('addresses') {
             @if (addressItems().length) {
               @for (item of addressItems(); track item.idAddress) {
                 <div class="data-row">
@@ -85,89 +108,58 @@
                     <strong>{{ item.country || 'Pays non renseigné' }}</strong>
                     <p>{{ item.ville || 'Ville —' }} · {{ item.government || 'Gouvernorat —' }}</p>
                   </div>
-                  <div class="row-actions" *ngIf="!readOnly()">
-                    <button class="icon-btn" (click)="openEdit('addresses', item)" title="Modifier"><app-icon name="pencil" [size]="14" /></button>
-                    <button class="icon-btn icon-btn--danger" (click)="deleteAddress(item)" title="Supprimer"><app-icon name="trash" [size]="14" /></button>
-                  </div>
+                  @if (!readOnly()) {
+                    <div class="row-actions">
+                      <button class="icon-btn" (click)="openEdit('addresses', item)" title="Modifier"><app-icon name="pencil" [size]="14" /></button>
+                      <button class="icon-btn icon-btn--danger" (click)="deleteAddress(item)" title="Supprimer"><app-icon name="trash" [size]="14" /></button>
+                    </div>
+                  }
                 </div>
               }
             } @else {
               <div class="empty-state">Aucune adresse enregistrée.</div>
             }
-          </div>
-        </article>
+          }
 
-        <article class="section-card">
-          <div class="section-card__header">
-            <div>
-              <h2><app-icon name="briefcase" [size]="16" /> Compte bancaire</h2>
-              <p>Coordonnées bancaires pour le paiement.</p>
-            </div>
-            <button class="btn btn--ghost" [disabled]="readOnly()" (click)="openCreate('bankAccount')">
-              <app-icon name="plus" [size]="14" /> {{ hasData('bankAccount') ? 'Modifier' : 'Ajouter' }}
-            </button>
-          </div>
-          <div class="section-card__body">
+          @case ('bankAccount') {
             @if (data()?.bankAccount) {
-                <div class="details-grid">
-                  <div><span>Bénéficiaire</span><strong>{{ data()?.bankAccount?.nameBenifice || '—' }}</strong></div>
-                  <div><span>Banque</span><strong>{{ data()?.bankAccount?.bankTitle || '—' }}</strong></div>
-                  <div><span>Ville</span><strong>{{ data()?.bankAccount?.ville || '—' }}</strong></div>
-                  <div><span>Compte</span><strong>{{ data()?.bankAccount?.compte || '—' }}</strong></div>
-                  <div><span>Clé</span><strong>{{ data()?.bankAccount?.controlleChiffre ?? '—' }}</strong></div>
-                  <div><span>Pays</span><strong>{{ data()?.bankAccount?.contry || '—' }}</strong></div>
-                  <div class="details-grid__full"><span>Document</span><strong>{{ documentName(data()?.bankAccount?.documentLink) }}</strong></div>
-                  @if (documentPreviewUrl(data()?.bankAccount?.documentLink)) {
-                    <div class="details-grid__full document-preview">
-                      <img [src]="documentPreviewUrl(data()?.bankAccount?.documentLink)!" alt="Document bancaire" />
-                    </div>
-                  }
-                </div>
+              <div class="details-grid">
+                <div><span>Bénéficiaire</span><strong>{{ data()?.bankAccount?.nameBenifice || '—' }}</strong></div>
+                <div><span>Banque</span><strong>{{ data()?.bankAccount?.bankTitle || '—' }}</strong></div>
+                <div><span>Ville</span><strong>{{ data()?.bankAccount?.ville || '—' }}</strong></div>
+                <div><span>Compte</span><strong>{{ data()?.bankAccount?.compte || '—' }}</strong></div>
+                <div><span>Clé</span><strong>{{ data()?.bankAccount?.controlleChiffre ?? '—' }}</strong></div>
+                <div><span>Pays</span><strong>{{ data()?.bankAccount?.contry || '—' }}</strong></div>
+                <div class="details-grid__full"><span>Document</span><strong>{{ documentName(data()?.bankAccount?.documentLink) }}</strong></div>
+                @if (documentPreviewUrl(data()?.bankAccount?.documentLink)) {
+                  <div class="details-grid__full document-preview">
+                    <img [src]="documentPreviewUrl(data()?.bankAccount?.documentLink)!" alt="Document bancaire" />
+                  </div>
+                }
+              </div>
             } @else {
               <div class="empty-state">Aucun compte bancaire enregistré.</div>
             }
-          </div>
-        </article>
+          }
 
-        <article class="section-card">
-          <div class="section-card__header">
-            <div>
-              <h2><app-icon name="users" [size]="16" /> Situation familiale</h2>
-              <p>Statut familial et justificatif.</p>
-            </div>
-            <button class="btn btn--ghost" [disabled]="readOnly()" (click)="openCreate('familySituation')">
-              <app-icon name="plus" [size]="14" /> {{ hasData('familySituation') ? 'Modifier' : 'Ajouter' }}
-            </button>
-          </div>
-          <div class="section-card__body">
+          @case ('familySituation') {
             @if (data()?.familySituation) {
-                <div class="details-grid">
-                  <div><span>Situation</span><strong>{{ data()?.familySituation?.situation || '—' }}</strong></div>
-                  <div><span>Document</span><strong>{{ data()?.familySituation?.documentUpload || '—' }}</strong></div>
-                  <div class="details-grid__full"><span>Image</span><strong>{{ documentName(data()?.familySituation?.documentLink) }}</strong></div>
-                  @if (documentPreviewUrl(data()?.familySituation?.documentLink)) {
-                    <div class="details-grid__full document-preview">
-                      <img [src]="documentPreviewUrl(data()?.familySituation?.documentLink)!" alt="Document familial" />
-                    </div>
-                  }
-                </div>
+              <div class="details-grid">
+                <div><span>Situation</span><strong>{{ data()?.familySituation?.situation || '—' }}</strong></div>
+                <div><span>Document</span><strong>{{ data()?.familySituation?.documentUpload || '—' }}</strong></div>
+                <div class="details-grid__full"><span>Image</span><strong>{{ documentName(data()?.familySituation?.documentLink) }}</strong></div>
+                @if (documentPreviewUrl(data()?.familySituation?.documentLink)) {
+                  <div class="details-grid__full document-preview">
+                    <img [src]="documentPreviewUrl(data()?.familySituation?.documentLink)!" alt="Document familial" />
+                  </div>
+                }
+              </div>
             } @else {
               <div class="empty-state">Aucune situation familiale enregistrée.</div>
             }
-          </div>
-        </article>
+          }
 
-        <article class="section-card">
-          <div class="section-card__header">
-            <div>
-              <h2><app-icon name="file-text" [size]="16" /> Données administratives</h2>
-              <p>Historique RH et classification professionnelle.</p>
-            </div>
-            <button class="btn btn--ghost" [disabled]="readOnly()" (click)="openCreate('administrativeData')">
-              <app-icon name="plus" [size]="14" /> Ajouter
-            </button>
-          </div>
-          <div class="section-card__body">
+          @case ('administrativeData') {
             @if (administrativeItems().length) {
               @for (item of administrativeItems(); track item.idAd) {
                 <div class="data-row">
@@ -180,29 +172,20 @@
                       </div>
                     }
                   </div>
-                  <div class="row-actions" *ngIf="!readOnly()">
-                    <button class="icon-btn" (click)="openEdit('administrativeData', item)" title="Modifier"><app-icon name="pencil" [size]="14" /></button>
-                    <button class="icon-btn icon-btn--danger" (click)="deleteAdministrativeData(item)" title="Supprimer"><app-icon name="trash" [size]="14" /></button>
-                  </div>
+                  @if (!readOnly()) {
+                    <div class="row-actions">
+                      <button class="icon-btn" (click)="openEdit('administrativeData', item)" title="Modifier"><app-icon name="pencil" [size]="14" /></button>
+                      <button class="icon-btn icon-btn--danger" (click)="deleteAdministrativeData(item)" title="Supprimer"><app-icon name="trash" [size]="14" /></button>
+                    </div>
+                  }
                 </div>
               }
             } @else {
               <div class="empty-state">Aucune donnée administrative enregistrée.</div>
             }
-          </div>
-        </article>
+          }
 
-        <article class="section-card">
-          <div class="section-card__header">
-            <div>
-              <h2><app-icon name="user" [size]="16" /> Personnes à charge</h2>
-              <p>Conjoint, enfant ou personne à charge.</p>
-            </div>
-            <button class="btn btn--ghost" [disabled]="readOnly()" (click)="openCreate('dependents')">
-              <app-icon name="plus" [size]="14" /> Ajouter
-            </button>
-          </div>
-          <div class="section-card__body">
+          @case ('dependents') {
             @if (dependentItems().length) {
               @for (item of dependentItems(); track item.idPerson) {
                 <div class="data-row">
@@ -210,29 +193,20 @@
                     <strong>{{ item.name }} {{ item.lastName }}</strong>
                     <p>{{ item.relation || '—' }} · {{ item.numTel || '—' }}</p>
                   </div>
-                  <div class="row-actions" *ngIf="!readOnly()">
-                    <button class="icon-btn" (click)="openEdit('dependents', item)" title="Modifier"><app-icon name="pencil" [size]="14" /></button>
-                    <button class="icon-btn icon-btn--danger" (click)="deleteDependent(item)" title="Supprimer"><app-icon name="trash" [size]="14" /></button>
-                  </div>
+                  @if (!readOnly()) {
+                    <div class="row-actions">
+                      <button class="icon-btn" (click)="openEdit('dependents', item)" title="Modifier"><app-icon name="pencil" [size]="14" /></button>
+                      <button class="icon-btn icon-btn--danger" (click)="deleteDependent(item)" title="Supprimer"><app-icon name="trash" [size]="14" /></button>
+                    </div>
+                  }
                 </div>
               }
             } @else {
               <div class="empty-state">Aucune personne à charge enregistrée.</div>
             }
-          </div>
-        </article>
+          }
 
-        <article class="section-card">
-          <div class="section-card__header">
-            <div>
-              <h2><app-icon name="bell" [size]="16" /> Contacts urgents</h2>
-              <p>Personnes à prévenir immédiatement.</p>
-            </div>
-            <button class="btn btn--ghost" [disabled]="readOnly()" (click)="openCreate('urgentContacts')">
-              <app-icon name="plus" [size]="14" /> Ajouter
-            </button>
-          </div>
-          <div class="section-card__body">
+          @case ('urgentContacts') {
             @if (urgentItems().length) {
               @for (item of urgentItems(); track item.idPerson) {
                 <div class="data-row">
@@ -240,178 +214,189 @@
                     <strong>{{ item.name }} {{ item.lastName }}</strong>
                     <p>{{ item.relation || '—' }} · {{ item.numTel || '—' }}</p>
                   </div>
-                  <div class="row-actions" *ngIf="!readOnly()">
-                    <button class="icon-btn" (click)="openEdit('urgentContacts', item)" title="Modifier"><app-icon name="pencil" [size]="14" /></button>
-                    <button class="icon-btn icon-btn--danger" (click)="deleteUrgentContact(item)" title="Supprimer"><app-icon name="trash" [size]="14" /></button>
-                  </div>
+                  @if (!readOnly()) {
+                    <div class="row-actions">
+                      <button class="icon-btn" (click)="openEdit('urgentContacts', item)" title="Modifier"><app-icon name="pencil" [size]="14" /></button>
+                      <button class="icon-btn icon-btn--danger" (click)="deleteUrgentContact(item)" title="Supprimer"><app-icon name="trash" [size]="14" /></button>
+                    </div>
+                  }
                 </div>
               }
             } @else {
               <div class="empty-state">Aucun contact urgent enregistré.</div>
             }
-          </div>
-        </article>
-      </section>
+          }
+        }
+      </div>
+    </section>
 
-      <aside class="editor-panel">
-        <div class="editor-panel__header">
-          <p class="eyebrow">Formulaire</p>
-          <h2>{{ getSectionTitle(selectedSection()) }}</h2>
-          <span>{{ getSectionDescription(selectedSection()) }}</span>
+    @if (readOnly()) {
+      <div class="readonly-banner">
+        <app-icon name="eye" [size]="18" />
+        <p>Mode consultation activé pour l'administrateur — modification désactivée.</p>
+      </div>
+    }
+  }
+
+  <!-- MODAL: Ajouter / Modifier -->
+  @if (modalOpen()) {
+    <div class="modal-backdrop" (click)="closeModal()">
+      <div class="modal-dialog" (click)="stopPropagation($event)">
+        <div class="modal-dialog__header">
+          <div>
+            <p class="eyebrow">Formulaire</p>
+            <h2>{{ getSectionTitle(selectedSection()) }}</h2>
+          </div>
+          <button class="icon-btn" (click)="closeModal()" title="Fermer">
+            <app-icon name="x" [size]="16" />
+          </button>
         </div>
 
-        @if (readOnly()) {
-          <div class="readonly-message">
-            <app-icon name="eye" [size]="20" />
-            <p>Mode consultation activé pour l’administrateur.</p>
-          </div>
-        } @else {
-          <div class="editor-form">
-            @switch (selectedSection()) {
-              @case ('addresses') {
-                <div class="form-grid">
-                  <label class="field"><span>Pays</span><input [ngModel]="addressForm().country" (ngModelChange)="updateAddressField('country', $event)" /></label>
-                  <label class="field"><span>Ville</span><input [ngModel]="addressForm().ville" (ngModelChange)="updateAddressField('ville', $event)" /></label>
-                  <label class="field"><span>Gouvernorat</span><input [ngModel]="addressForm().government" (ngModelChange)="updateAddressField('government', $event)" /></label>
-                  <label class="field field--full"><span>Lien document</span><input [ngModel]="addressForm().documentLink" (ngModelChange)="updateAddressField('documentLink', $event)" /></label>
-                </div>
-              }
-              @case ('bankAccount') {
-                <div class="form-grid">
-                  <label class="field"><span>Bénéficiaire</span><input [ngModel]="bankForm().nameBenifice" (ngModelChange)="updateBankField('nameBenifice', $event)" /></label>
-                  <label class="field"><span>Banque</span><input [ngModel]="bankForm().bankTitle" (ngModelChange)="updateBankField('bankTitle', $event)" /></label>
-                  <label class="field"><span>Ville</span><input [ngModel]="bankForm().ville" (ngModelChange)="updateBankField('ville', $event)" /></label>
-                  <label class="field"><span>Compte</span><input [ngModel]="bankForm().compte" (ngModelChange)="updateBankField('compte', $event)" /></label>
-                  <label class="field"><span>Clé de contrôle</span><input type="number" [ngModel]="bankForm().controlleChiffre" (ngModelChange)="updateBankField('controlleChiffre', $event)" /></label>
-                  <label class="field"><span>Pays</span><input [ngModel]="bankForm().contry" (ngModelChange)="updateBankField('contry', $event)" /></label>
-                  <div class="upload-card field field--full">
-                    <div>
-                      <span>Image du document</span>
-                      <strong>{{ getDocumentLabel('bankAccount') }}</strong>
-                    </div>
-                    <label class="upload-btn" [class.is-disabled]="readOnly()">
-                      <input type="file" accept="image/*" (change)="onBankDocumentSelected($event)" [disabled]="readOnly()" />
-                      Choisir une image
-                    </label>
-                  </div>
-                </div>
-              }
-              @case ('familySituation') {
-                <div class="form-grid">
-                  <label class="field"><span>Situation</span><input [ngModel]="familyForm().situation" (ngModelChange)="updateFamilyField('situation', $event)" placeholder="Célibataire / Marié..." /></label>
-                  <label class="field"><span>Document</span>
-                    <select [ngModel]="familyForm().documentUpload" (ngModelChange)="updateFamilyField('documentUpload', $event)">
-                      <option value="">Sélectionner</option>
-                      <option value="CELIBATAIRE">Célibataire</option>
-                      <option value="MARIE">Marié</option>
-                      <option value="DIVORCE">Divorcé</option>
-                    </select>
-                  </label>
-                  <div class="upload-card field field--full">
-                    <div>
-                      <span>Image du document</span>
-                      <strong>{{ getDocumentLabel('familySituation') }}</strong>
-                    </div>
-                    <label class="upload-btn" [class.is-disabled]="readOnly()">
-                      <input type="file" accept="image/*" (change)="onFamilyDocumentSelected($event)" [disabled]="readOnly()" />
-                      Choisir une image
-                    </label>
-                  </div>
-                </div>
-              }
-              @case ('administrativeData') {
-                <div class="form-grid">
-                  <label class="field"><span>Situation employé</span>
-                    <select [ngModel]="adminForm().situationEmploye" (ngModelChange)="updateAdministrativeField('situationEmploye', $event)">
-                      <option value="">Sélectionner</option>
-                      <option value="ACTIF">ACTIF</option>
-                      <option value="INACTIF">INACTIF</option>
-                      <option value="EN_CONGE">EN_CONGE</option>
-                      <option value="EN_MISSION">EN_MISSION</option>
-                      <option value="SUSPENDU">SUSPENDU</option>
-                      <option value="RETRAITE">RETRAITE</option>
-                      <option value="DEMISSIONNE">DEMISSIONNE</option>
-                      <option value="LICENCIE">LICENCIE</option>
-                    </select>
-                  </label>
-                  <label class="field"><span>Catégorie</span>
-                    <select [ngModel]="adminForm().cathegorieSituation" (ngModelChange)="updateAdministrativeField('cathegorieSituation', $event)">
-                      <option value="">Sélectionner</option>
-                      <option value="PERMANENT">PERMANENT</option>
-                      <option value="TEMPORAIRE">TEMPORAIRE</option>
-                      <option value="STAGIAIRE">STAGIAIRE</option>
-                      <option value="CONTRACTUEL">CONTRACTUEL</option>
-                      <option value="FREELANCE">FREELANCE</option>
-                    </select>
-                  </label>
-                  <label class="field"><span>Classification</span>
-                    <select [ngModel]="adminForm().classification" (ngModelChange)="updateAdministrativeField('classification', $event)">
-                      <option value="">Sélectionner</option>
-                      <option value="CADRE">CADRE</option>
-                      <option value="TECHNICIEN">TECHNICIEN</option>
-                      <option value="OUVRIER">OUVRIER</option>
-                      <option value="ADMINISTRATIF">ADMINISTRATIF</option>
-                      <option value="MANAGER">MANAGER</option>
-                      <option value="INGENIEUR">INGENIEUR</option>
-                    </select>
-                  </label>
-                  <label class="field"><span>Qualification</span>
-                    <select [ngModel]="adminForm().qualification" (ngModelChange)="updateAdministrativeField('qualification', $event)">
-                      <option value="">Sélectionner</option>
-                      <option value="SANS_DIPLOME">SANS_DIPLOME</option>
-                      <option value="BAC">BAC</option>
-                      <option value="BTS">BTS</option>
-                      <option value="LICENCE">LICENCE</option>
-                      <option value="MASTER">MASTER</option>
-                      <option value="INGENIEUR">INGENIEUR</option>
-                      <option value="DOCTORAT">DOCTORAT</option>
-                      <option value="CERTIFICATION_PROFESSIONNELLE">CERTIFICATION_PROFESSIONNELLE</option>
-                    </select>
-                  </label>
-                  <label class="field"><span>Date inscription</span><input type="date" [ngModel]="adminForm().dateInscrit" (ngModelChange)="updateAdministrativeField('dateInscrit', $event)" /></label>
-                  <div class="upload-card field field--full">
-                    <div>
-                      <span>Image du document</span>
-                      <strong>{{ getDocumentLabel('administrativeData') }}</strong>
-                    </div>
-                    <label class="upload-btn" [class.is-disabled]="readOnly()">
-                      <input type="file" accept="image/*" (change)="onAdminDocumentSelected($event)" [disabled]="readOnly()" />
-                      Choisir une image
-                    </label>
-                  </div>
-                </div>
-              }
-              @case ('dependents') {
-                <div class="form-grid">
-                  <label class="field"><span>Nom</span><input [ngModel]="dependentForm().name" (ngModelChange)="updateDependentField('name', $event)" /></label>
-                  <label class="field"><span>Prénom</span><input [ngModel]="dependentForm().lastName" (ngModelChange)="updateDependentField('lastName', $event)" /></label>
-                  <label class="field"><span>Lien</span><input [ngModel]="dependentForm().relation" (ngModelChange)="updateDependentField('relation', $event)" /></label>
-                  <label class="field"><span>Téléphone</span><input [ngModel]="dependentForm().numTel" (ngModelChange)="updateDependentField('numTel', $event)" /></label>
-                </div>
-              }
-              @case ('urgentContacts') {
-                <div class="form-grid">
-                  <label class="field"><span>Nom</span><input [ngModel]="urgentForm().name" (ngModelChange)="updateUrgentField('name', $event)" /></label>
-                  <label class="field"><span>Prénom</span><input [ngModel]="urgentForm().lastName" (ngModelChange)="updateUrgentField('lastName', $event)" /></label>
-                  <label class="field"><span>Lien</span><input [ngModel]="urgentForm().relation" (ngModelChange)="updateUrgentField('relation', $event)" /></label>
-                  <label class="field"><span>Téléphone</span><input [ngModel]="urgentForm().numTel" (ngModelChange)="updateUrgentField('numTel', $event)" /></label>
-                </div>
-              }
+        <div class="modal-dialog__body">
+          @switch (selectedSection()) {
+            @case ('addresses') {
+              <div class="form-grid">
+                <label class="field"><span>Pays</span><input [ngModel]="addressForm().country" (ngModelChange)="updateAddressField('country', $event)" /></label>
+                <label class="field"><span>Ville</span><input [ngModel]="addressForm().ville" (ngModelChange)="updateAddressField('ville', $event)" /></label>
+                <label class="field"><span>Gouvernorat</span><input [ngModel]="addressForm().government" (ngModelChange)="updateAddressField('government', $event)" /></label>
+                <label class="field field--full"><span>Lien document</span><input [ngModel]="addressForm().documentLink" (ngModelChange)="updateAddressField('documentLink', $event)" /></label>
+              </div>
             }
-          </div>
+            @case ('bankAccount') {
+              <div class="form-grid">
+                <label class="field"><span>Bénéficiaire</span><input [ngModel]="bankForm().nameBenifice" (ngModelChange)="updateBankField('nameBenifice', $event)" /></label>
+                <label class="field"><span>Banque</span><input [ngModel]="bankForm().bankTitle" (ngModelChange)="updateBankField('bankTitle', $event)" /></label>
+                <label class="field"><span>Ville</span><input [ngModel]="bankForm().ville" (ngModelChange)="updateBankField('ville', $event)" /></label>
+                <label class="field"><span>Compte</span><input [ngModel]="bankForm().compte" (ngModelChange)="updateBankField('compte', $event)" /></label>
+                <label class="field"><span>Clé de contrôle</span><input type="number" [ngModel]="bankForm().controlleChiffre" (ngModelChange)="updateBankField('controlleChiffre', $event)" /></label>
+                <label class="field"><span>Pays</span><input [ngModel]="bankForm().contry" (ngModelChange)="updateBankField('contry', $event)" /></label>
+                <div class="upload-card field field--full">
+                  <div>
+                    <span>Image du document</span>
+                    <strong>{{ getDocumentLabel('bankAccount') }}</strong>
+                  </div>
+                  <label class="upload-btn">
+                    <input type="file" accept="image/*" (change)="onBankDocumentSelected($event)" />
+                    Choisir une image
+                  </label>
+                </div>
+              </div>
+            }
+            @case ('familySituation') {
+              <div class="form-grid">
+                <label class="field"><span>Situation</span><input [ngModel]="familyForm().situation" (ngModelChange)="updateFamilyField('situation', $event)" placeholder="Célibataire / Marié..." /></label>
+                <label class="field"><span>Document</span>
+                  <select [ngModel]="familyForm().documentUpload" (ngModelChange)="updateFamilyField('documentUpload', $event)">
+                    <option value="">Sélectionner</option>
+                    <option value="CELIBATAIRE">Célibataire</option>
+                    <option value="MARIE">Marié</option>
+                    <option value="DIVORCE">Divorcé</option>
+                  </select>
+                </label>
+                <div class="upload-card field field--full">
+                  <div>
+                    <span>Image du document</span>
+                    <strong>{{ getDocumentLabel('familySituation') }}</strong>
+                  </div>
+                  <label class="upload-btn">
+                    <input type="file" accept="image/*" (change)="onFamilyDocumentSelected($event)" />
+                    Choisir une image
+                  </label>
+                </div>
+              </div>
+            }
+            @case ('administrativeData') {
+              <div class="form-grid">
+                <label class="field"><span>Situation employé</span>
+                  <select [ngModel]="adminForm().situationEmploye" (ngModelChange)="updateAdministrativeField('situationEmploye', $event)">
+                    <option value="">Sélectionner</option>
+                    <option value="ACTIF">ACTIF</option>
+                    <option value="INACTIF">INACTIF</option>
+                    <option value="EN_CONGE">EN_CONGE</option>
+                    <option value="EN_MISSION">EN_MISSION</option>
+                    <option value="SUSPENDU">SUSPENDU</option>
+                    <option value="RETRAITE">RETRAITE</option>
+                    <option value="DEMISSIONNE">DEMISSIONNE</option>
+                    <option value="LICENCIE">LICENCIE</option>
+                  </select>
+                </label>
+                <label class="field"><span>Catégorie</span>
+                  <select [ngModel]="adminForm().cathegorieSituation" (ngModelChange)="updateAdministrativeField('cathegorieSituation', $event)">
+                    <option value="">Sélectionner</option>
+                    <option value="PERMANENT">PERMANENT</option>
+                    <option value="TEMPORAIRE">TEMPORAIRE</option>
+                    <option value="STAGIAIRE">STAGIAIRE</option>
+                    <option value="CONTRACTUEL">CONTRACTUEL</option>
+                    <option value="FREELANCE">FREELANCE</option>
+                  </select>
+                </label>
+                <label class="field"><span>Classification</span>
+                  <select [ngModel]="adminForm().classification" (ngModelChange)="updateAdministrativeField('classification', $event)">
+                    <option value="">Sélectionner</option>
+                    <option value="CADRE">CADRE</option>
+                    <option value="TECHNICIEN">TECHNICIEN</option>
+                    <option value="OUVRIER">OUVRIER</option>
+                    <option value="ADMINISTRATIF">ADMINISTRATIF</option>
+                    <option value="MANAGER">MANAGER</option>
+                    <option value="INGENIEUR">INGENIEUR</option>
+                  </select>
+                </label>
+                <label class="field"><span>Qualification</span>
+                  <select [ngModel]="adminForm().qualification" (ngModelChange)="updateAdministrativeField('qualification', $event)">
+                    <option value="">Sélectionner</option>
+                    <option value="SANS_DIPLOME">SANS_DIPLOME</option>
+                    <option value="BAC">BAC</option>
+                    <option value="BTS">BTS</option>
+                    <option value="LICENCE">LICENCE</option>
+                    <option value="MASTER">MASTER</option>
+                    <option value="INGENIEUR">INGENIEUR</option>
+                    <option value="DOCTORAT">DOCTORAT</option>
+                    <option value="CERTIFICATION_PROFESSIONNELLE">CERTIFICATION_PROFESSIONNELLE</option>
+                  </select>
+                </label>
+                <label class="field"><span>Date inscription</span><input type="date" [ngModel]="adminForm().dateInscrit" (ngModelChange)="updateAdministrativeField('dateInscrit', $event)" /></label>
+                <div class="upload-card field field--full">
+                  <div>
+                    <span>Image du document</span>
+                    <strong>{{ getDocumentLabel('administrativeData') }}</strong>
+                  </div>
+                  <label class="upload-btn">
+                    <input type="file" accept="image/*" (change)="onAdminDocumentSelected($event)" />
+                    Choisir une image
+                  </label>
+                </div>
+              </div>
+            }
+            @case ('dependents') {
+              <div class="form-grid">
+                <label class="field"><span>Nom</span><input [ngModel]="dependentForm().name" (ngModelChange)="updateDependentField('name', $event)" /></label>
+                <label class="field"><span>Prénom</span><input [ngModel]="dependentForm().lastName" (ngModelChange)="updateDependentField('lastName', $event)" /></label>
+                <label class="field"><span>Lien</span><input [ngModel]="dependentForm().relation" (ngModelChange)="updateDependentField('relation', $event)" /></label>
+                <label class="field"><span>Téléphone</span><input [ngModel]="dependentForm().numTel" (ngModelChange)="updateDependentField('numTel', $event)" /></label>
+              </div>
+            }
+            @case ('urgentContacts') {
+              <div class="form-grid">
+                <label class="field"><span>Nom</span><input [ngModel]="urgentForm().name" (ngModelChange)="updateUrgentField('name', $event)" /></label>
+                <label class="field"><span>Prénom</span><input [ngModel]="urgentForm().lastName" (ngModelChange)="updateUrgentField('lastName', $event)" /></label>
+                <label class="field"><span>Lien</span><input [ngModel]="urgentForm().relation" (ngModelChange)="updateUrgentField('relation', $event)" /></label>
+                <label class="field"><span>Téléphone</span><input [ngModel]="urgentForm().numTel" (ngModelChange)="updateUrgentField('numTel', $event)" /></label>
+              </div>
+            }
+          }
+        </div>
 
-          <div class="editor-actions">
-            <button class="btn btn--secondary" type="button" (click)="resetForm(selectedSection())">Réinitialiser</button>
-            <button class="btn btn--primary" type="button" (click)="submitCurrent()" [disabled]="saving()">
-              @if (saving()) {
-                Enregistrement...
-              } @else {
-                Enregistrer
-              }
-            </button>
-          </div>
-        }
-      </aside>
+        <div class="modal-dialog__actions">
+          <button class="btn btn--secondary" type="button" (click)="resetForm(selectedSection())">Réinitialiser</button>
+          <button class="btn btn--primary" type="button" (click)="submitCurrent()" [disabled]="saving()">
+            @if (saving()) {
+              Enregistrement...
+            } @else {
+              Enregistrer
+            }
+          </button>
+        </div>
+      </div>
     </div>
   }
 </div>

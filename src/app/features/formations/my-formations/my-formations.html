@@ -1,0 +1,57 @@
+<div class="page">
+  <app-toast [message]="toastMessage()" [type]="toastType()" [visible]="toastVisible()" />
+
+  @if (loading()) {
+    <div class="empty-state">Chargement...</div>
+  } @else {
+    <section class="columns">
+      <article class="column">
+        <h2>En attente</h2>
+        @for (item of grouped().pending; track item.idDemandeFormation) {
+          <div class="card status-orange">
+            <div class="card__head">
+              <h3>{{ item.formation.title }}</h3>
+              <span class="badge orange">{{ labels[item.status] }}</span>
+            </div>
+            <p>{{ item.formation.domain }} - {{ item.formation.theme }}</p>
+            <span class="meta">{{ formatDate(item.date) }}</span>
+          </div>
+        } @empty {
+          <div class="empty-state">Aucune demande en attente.</div>
+        }
+      </article>
+
+      <article class="column">
+        <h2>Acceptées</h2>
+        @for (item of grouped().accepted; track item.idDemandeFormation) {
+          <div class="card status-green">
+            <div class="card__head">
+              <h3>{{ item.formation.title }}</h3>
+              <span class="badge green">{{ labels[item.status] }}</span>
+            </div>
+            <p>{{ item.formation.domain }} - {{ item.formation.theme }}</p>
+            <span class="meta">{{ formatDate(item.date) }}</span>
+          </div>
+        } @empty {
+          <div class="empty-state">Aucune demande acceptée.</div>
+        }
+      </article>
+
+      <article class="column">
+        <h2>Refusées</h2>
+        @for (item of grouped().refused; track item.idDemandeFormation) {
+          <div class="card status-red">
+            <div class="card__head">
+              <h3>{{ item.formation.title }}</h3>
+              <span class="badge red">{{ labels[item.status] }}</span>
+            </div>
+            <p>{{ item.formation.domain }} - {{ item.formation.theme }}</p>
+            <span class="meta">{{ formatDate(item.date) }}</span>
+          </div>
+        } @empty {
+          <div class="empty-state">Aucune demande refusée.</div>
+        }
+      </article>
+    </section>
+  }
+</div>

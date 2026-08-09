@@ -73,6 +73,8 @@ export class SupervisorDashboard implements OnInit {
     };
   });
 
+  readonly memberProgress = computed(() => Math.min(this.stats().members * 20, 100));
+
   readonly selectedMember = computed(() => {
     const memberId = this.selectedMemberId();
     if (!memberId) {

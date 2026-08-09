@@ -1,0 +1,113 @@
+<div class="formation-page">
+  <app-toast [message]="toastMessage()" [type]="toastType()" [visible]="toastVisible()" />
+  <app-alert
+    [visible]="alertVisible()"
+    [title]="alertTitle()"
+    [message]="alertMessage()"
+    type="danger"
+    confirmText="Supprimer"
+    cancelText="Annuler"
+    (confirmed)="confirmDelete()"
+    (cancelled)="cancelDelete()"
+  />
+
+  <section class="content-grid">
+    <form class="panel form-panel" [formGroup]="form" (ngSubmit)="save()">
+      <div class="panel__head">
+        <div>
+          <p class="eyebrow">Gestion des formations</p>
+          <h2>{{ selectedFormation() ? 'Modifier la formation' : 'Ajouter une formation' }}</h2>
+          <p>Les champs obligatoires permettent de garder le catalogue propre et exploitable.</p>
+        </div>
+      </div>
+
+      <div class="field-grid">
+        <label>
+          <span>Titre</span>
+          <input type="text" formControlName="title" placeholder="Ex: Communication professionnelle" />
+        </label>
+        <label>
+          <span>Offre</span>
+          <textarea rows="4" formControlName="offreFormation" placeholder="Resume ou detail de l'offre"></textarea>
+        </label>
+        <label>
+          <span>Domaine</span>
+          <input type="text" formControlName="domain" placeholder="Ex: Finance, RH, IT" />
+        </label>
+        <label>
+          <span>Theme</span>
+          <input type="text" formControlName="theme" placeholder="Ex: Leadership" />
+        </label>
+        <label>
+          <span>Duree</span>
+          <input type="number" min="1" formControlName="duree" />
+        </label>
+        <label>
+          <span>Unite</span>
+          <input type="text" formControlName="unite" placeholder="Jour, heure, semaine" />
+        </label>
+      </div>
+
+      <label class="full">
+        <span>Lieu</span>
+        <input type="text" formControlName="lieu" placeholder="Ex: Tunis / En ligne" />
+      </label>
+
+      <div class="form-actions">
+        <button class="secondary-btn" type="button" (click)="startCreate()">Reinitialiser</button>
+        <button class="primary-btn" type="submit" [disabled]="isSaving()">
+          <app-icon name="check" [size]="14" />
+          {{ isSaving() ? 'Enregistrement...' : 'Enregistrer' }}
+        </button>
+      </div>
+    </form>
+
+    <div class="panel list-panel">
+      <div class="panel__head panel__head--row">
+        <div>
+          <p class="eyebrow">Catalogue</p>
+          <h2>Rechercher, ouvrir ou supprimer une fiche formation.</h2>
+        </div>
+        <label class="search">
+          <app-icon name="search" [size]="14" />
+          <input type="search" placeholder="Rechercher..." (input)="onSearch($event)" />
+        </label>
+      </div>
+
+      @if (loading()) {
+        <div class="empty-state">Chargement des formations...</div>
+      } @else if (!filteredFormations().length) {
+        <div class="empty-state">Aucune formation trouvée.</div>
+      } @else {
+        <div class="formation-list">
+          @for (item of filteredFormations(); track item.idFormation) {
+            <article class="formation-card" [class.is-selected]="selectedFormation()?.idFormation === item.idFormation">
+              <div class="formation-card__top">
+                <div>
+                  <p class="tag">{{ item.domain }}</p>
+                  <h3>{{ item.title }}</h3>
+                </div>
+                <span class="duration">{{ item.duree }} {{ item.unite }}</span>
+              </div>
+              <p class="summary">{{ item.theme }}</p>
+              <div class="meta">
+                <span>{{ item.offreFormation }}</span>
+                <span>{{ item.lieu }}</span>
+              </div>
+              <div class="card-actions">
+                <button class="ghost-btn" type="button" (click)="startEdit(item)">
+                  <app-icon name="pencil" [size]="14" />
+                  Modifier
+                </button>
+                <button class="danger-btn" type="button" (click)="askDelete(item)">
+                  <app-icon name="trash" [size]="14" />
+                  Supprimer
+                </button>
+              </div>
+            </article>
+          }
+        </div>
+      }
+    </div>
+  </section>
+</div>

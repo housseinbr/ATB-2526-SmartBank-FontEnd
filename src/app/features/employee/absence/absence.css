@@ -21,7 +21,7 @@
   grid-template-columns: 1.6fr 0.9fr;
   gap: 1rem;
   background:
-    linear-gradient(135deg, rgba(164, 24, 42, 0.06), rgba(59, 130, 246, 0.03)),
+    linear-gradient(135deg, rgba(164, 24, 42, 0.06), rgba(15, 23, 42, 0.03)),
     #fff;
 }
 
@@ -130,14 +130,9 @@
   color: #334155;
 }
 
-.summary-card--blue .summary-card__icon {
-  background: rgba(59, 130, 246, 0.12);
-  color: #2563eb;
-}
-
 .summary-card--slate .summary-card__icon {
-  background: rgba(71, 85, 105, 0.12);
-  color: #334155;
+  background: rgba(15, 23, 42, 0.08);
+  color: #111827;
 }
 
 .summary-card--amber .summary-card__icon {
@@ -173,12 +168,8 @@
   color: #94a3b8;
 }
 
-.summary-card--blue {
-  background: linear-gradient(180deg, rgba(59, 130, 246, 0.06), #fff);
-}
-
 .summary-card--slate {
-  background: linear-gradient(180deg, rgba(71, 85, 105, 0.05), #fff);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.05), #fff);
 }
 
 .summary-card--amber {

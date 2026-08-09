@@ -8,6 +8,7 @@ import { Icon } from '../../shared/components/icon/icon';
 import { Toast, ToastType } from '../../shared/components/toast/toast';
 import { AuthService } from '../../core/services/auth.service';
 import { ProfileDataService } from '../../core/services/profile-data.service';
+import { IconName } from '../../shared/components/icon/icon';
 import {
   AddressData,
   AdministrativeData,
@@ -43,6 +44,20 @@ export class ProfileData {
   selectedSection = signal<SectionKey>('addresses');
   targetUserId = signal<number | null>(null);
   readOnly = signal(false);
+
+  // Onglet actif affiché dans le panneau principal (évite le scroll : une seule section visible à la fois)
+  activeTab = signal<SectionKey>('addresses');
+  // Contrôle l'ouverture de la modale d'ajout/modification
+  modalOpen = signal(false);
+
+readonly sectionTabs: { key: SectionKey; label: string; icon: IconName }[] = [
+  { key: 'addresses', label: 'Adresse', icon: 'search' },
+  { key: 'bankAccount', label: 'Banque', icon: 'briefcase' },
+  { key: 'familySituation', label: 'Famille', icon: 'users' },
+  { key: 'administrativeData', label: 'Administratif', icon: 'file-text' },
+  { key: 'dependents', label: 'À charge', icon: 'user' },
+  { key: 'urgentContacts', label: 'Urgence', icon: 'bell' },
+];
 
   addressForm = signal<AddressData>({});
   bankForm = signal<BankAccountData>({});
@@ -107,6 +122,39 @@ export class ProfileData {
   dependentItems = computed(() => this.data()?.dependents ?? []);
   urgentItems = computed(() => this.data()?.urgentContacts ?? []);
 
+  setActiveTab(key: SectionKey) {
+    this.activeTab.set(key);
+  }
+
+  tabCount(key: SectionKey): number {
+    const data = this.data();
+    if (!data) return 0;
+    switch (key) {
+      case 'addresses':
+        return data.addresses?.length ?? 0;
+      case 'bankAccount':
+        return data.bankAccount ? 1 : 0;
+      case 'familySituation':
+        return data.familySituation ? 1 : 0;
+      case 'administrativeData':
+        return data.administrativeData?.length ?? 0;
+      case 'dependents':
+        return data.dependents?.length ?? 0;
+      case 'urgentContacts':
+        return data.urgentContacts?.length ?? 0;
+      default:
+        return 0;
+    }
+  }
+
+  closeModal() {
+    this.modalOpen.set(false);
+  }
+
+  stopPropagation(event: Event) {
+    event.stopPropagation();
+  }
+
   showToast(message: string, type: ToastType = 'success', duration = 3000) {
     if (this.toastTimeout) {
       clearTimeout(this.toastTimeout);
@@ -163,11 +211,15 @@ export class ProfileData {
 
   openCreate(section: SectionKey) {
     this.selectedSection.set(section);
+    this.activeTab.set(section);
     this.resetForm(section);
+    this.modalOpen.set(true);
   }
 
   openEdit(section: SectionKey, item: any) {
     this.selectedSection.set(section);
+    this.activeTab.set(section);
+    this.modalOpen.set(true);
     switch (section) {
       case 'addresses':
         this.addressForm.set({ ...item });
@@ -347,6 +399,7 @@ export class ProfileData {
     save$.pipe(finalize(() => this.saving.set(false))).subscribe({
       next: () => {
         this.showToast('Données enregistrées avec succès.', 'success');
+        this.modalOpen.set(false);
         this.load();
       },
       error: (err) => {

@@ -250,8 +250,8 @@ private doAssignSupervisor(user: UserResponse, sup: UserResponse | null) {
     const s = this.stats();
     return [
       { label: 'Admins', value: s.admins, color: '#a4182a' },
-      { label: 'Employés', value: s.employes, color: '#2563eb' },
-      { label: 'Superviseurs', value: s.superviseurs, color: '#9333ea' },
+      { label: 'Employés', value: s.employes, color: '#64748b' },
+      { label: 'Superviseurs', value: s.superviseurs, color: '#16a34a' },
     ].filter(d => d.value > 0);
   });
 
@@ -437,6 +437,10 @@ private doAssignSupervisor(user: UserResponse, sup: UserResponse | null) {
     });
   }
 
+  openCompetances(user: UserResponse) {
+    this.router.navigate(['/dashboard/admin/users', user.id, 'competances']);
+  }
+
   openSupervisorModal(supervisor: UserResponse | null) {
     if (supervisor) {
       this.selectedSupervisor.set(supervisor);
@@ -479,9 +483,9 @@ private doAssignSupervisor(user: UserResponse, sup: UserResponse | null) {
       case Role.ADMIN:
         return '#a4182a';
       case Role.SUPERVISEUR:
-        return '#9333ea';
+        return '#16a34a';
       case Role.EMPLOYE:
-        return '#2563eb';
+        return '#64748b';
       default:
         return '#666';
     }
@@ -492,9 +496,9 @@ private doAssignSupervisor(user: UserResponse, sup: UserResponse | null) {
       case Role.ADMIN:
         return 'rgba(164, 24, 42, 0.1)';
       case Role.SUPERVISEUR:
-        return 'rgba(147, 51, 234, 0.1)';
+        return 'rgba(34, 197, 94, 0.1)';
       case Role.EMPLOYE:
-        return 'rgba(37, 99, 235, 0.1)';
+        return 'rgba(100, 116, 139, 0.1)';
       default:
         return 'rgba(0,0,0,0.05)';
     }
@@ -505,7 +509,7 @@ private doAssignSupervisor(user: UserResponse, sup: UserResponse | null) {
   }
 
   getAvatarColor(user: UserResponse): string {
-    const colors = ['#a4182a', '#2563eb', '#9333ea', '#16a34a', '#d97706', '#0891b2'];
+    const colors = ['#a4182a', '#64748b', '#16a34a', '#d97706', '#111827', '#b21f35'];
     return colors[user.id % colors.length];
   }
 

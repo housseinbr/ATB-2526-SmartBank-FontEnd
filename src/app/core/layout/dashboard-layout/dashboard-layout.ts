@@ -49,6 +49,22 @@ export class DashboardLayout {
   }
 
   private updateTitle(url: string) {
+    if (url.includes('/dashboard/formation-lab') || url.includes('/dashboard/superviseur/formation-lab')) {
+      this.routeTitle.set('Formation Lab');
+      return;
+    }
+    if (url.includes('/dashboard/mes-formations') || url.includes('/dashboard/superviseur/mes-formations')) {
+      this.routeTitle.set('Mes formations');
+      return;
+    }
+    if (url.includes('/dashboard/formations') || url.includes('/dashboard/admin/formations')) {
+      this.routeTitle.set('Formations');
+      return;
+    }
+    if (url.includes('/dashboard/formation-demandes')) {
+      this.routeTitle.set('Demandes formations');
+      return;
+    }
     if (url.includes('/dashboard/admin/demandes')) {
       this.routeTitle.set('Demandes');
       return;

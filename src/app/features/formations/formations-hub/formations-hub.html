@@ -1,0 +1,26 @@
+<div class="formations-hub">
+  <section class="hero-card">
+    <div class="hero-card__content">
+      <p class="eyebrow">Espace formations</p>
+      <h1 class="page-title">Formations</h1>
+      <p class="hero-card__subtitle">{{ heroSubtitle() }}</p>
+    </div>
+
+    <div class="hero-card__meta">
+      <span class="role-badge">{{ heroLabel() }}</span>
+      <span class="hero-card__hint">
+        @if (canManage()) {
+          Catalogue et gestion des fiches
+        } @else {
+          Sélection rapide depuis le catalogue
+        }
+      </span>
+    </div>
+  </section>
+
+  @if (canManage()) {
+    <app-formations-management />
+  } @else {
+    <app-formation-lab />
+  }
+</div>
