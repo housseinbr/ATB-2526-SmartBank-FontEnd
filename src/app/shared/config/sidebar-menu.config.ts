@@ -18,28 +18,32 @@ export const SIDEBAR_CONFIG: Record<Role, SidebarConfig> = {
     items: [
       { label: 'Utilisateurs', route: '/dashboard/admin/users', icon: 'users' },
       { label: 'Demandes', route: '/dashboard/admin/demandes', icon: 'inbox' },
-      { label: 'Commentaires', route: '/dashboard/comments', icon: 'file-text' },
       { label: 'Calendrier', route: '/dashboard/admin/calendrier', icon: 'calendar' },
+      { label: 'Commentaires', route: '/dashboard/comments', icon: 'file-text' },
+      
     ],
   },
   [Role.SUPERVISEUR]: {
     brandLabel: 'Espace Superviseur',
     items: [
-      { label: 'Mon équipe', route: '/dashboard/superviseur/team', icon: 'users' },
-      { label: 'Demandes', route: '/dashboard/superviseur/demandes', icon: 'inbox' },
-      { label: 'Commentaires', route: '/dashboard/comments', icon: 'file-text' },
-      { label: 'Calendrier', route: '/dashboard/superviseur/calendrier', icon: 'calendar' },
       { label: 'Mes données', route: '/dashboard/mes-donnees', icon: 'file-text' },
       { label: 'Mes absences', route: '/dashboard/absences', icon: 'calendar' },
+      { label: 'Mon équipe', route: '/dashboard/superviseur/team', icon: 'users' },
+      { label: 'Demandes', route: '/dashboard/superviseur/demandes', icon: 'inbox' },
+      { label: 'Calendrier', route: '/dashboard/superviseur/calendrier', icon: 'calendar' },
+      { label: 'Commentaires', route: '/dashboard/comments', icon: 'file-text' },
+      
+      
     ],
   },
   [Role.EMPLOYE]: {
     brandLabel: 'Espace Employé',
     items: [
       { label: 'Mes demandes', route: '/dashboard/employe', icon: 'inbox' },
-      { label: 'Commentaires', route: '/dashboard/comments', icon: 'file-text' },
       { label: 'Mes données', route: '/dashboard/mes-donnees', icon: 'file-text' },
       { label: 'Mes absences', route: '/dashboard/absences', icon: 'calendar' },
+      { label: 'Commentaires', route: '/dashboard/comments', icon: 'file-text' },
+      
     ],
   },
 };

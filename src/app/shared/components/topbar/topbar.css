@@ -7,9 +7,12 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 28px;
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 100;
+  right: 0;
+  left: var(--sidebar-width, 260px);
+  z-index: 1100;
+  transition: left 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease;
   box-shadow: 0 6px 24px rgba(15, 23, 42, 0.03);
 }
 
@@ -362,6 +365,7 @@
     align-items: flex-start;
     gap: 12px;
     flex-direction: column;
+    left: 0;
   }
 
   .topbar__right {

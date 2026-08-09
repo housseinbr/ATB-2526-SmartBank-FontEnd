@@ -212,6 +212,21 @@
       </div>
 
       <form class="absence-form" [formGroup]="form" (ngSubmit)="submitForm()">
+        <div class="form-summary">
+          <span>Solde disponible : <strong>{{ balance | number:'1.2-2' }}</strong> jour(s)</span>
+          <span>Durée demandée : <strong>{{ requestedDaysPreview | number:'1.2-2' }}</strong> jour(s)</span>
+        </div>
+
+        @if (form.errors?.['dateOrder']) {
+          <p class="form-error">La date de fin ne peut pas être avant la date de début.</p>
+        }
+
+        @if (form.errors?.['insufficientBalance']) {
+          <p class="form-error">
+            Solde insuffisant: cette demande dépasse votre solde disponible.
+          </p>
+        }
+
         <div class="form-row">
           <div class="form-group">
             <label for="type">Type d'absence</label>
@@ -242,7 +257,7 @@
 
           <div class="form-group">
             <label for="dateEnd">Date de fin</label>
-            <input id="dateEnd" type="date" formControlName="dateEnd" />
+            <input id="dateEnd" type="date" formControlName="dateEnd" [attr.min]="form.get('dateStart')?.value || null" />
           </div>
         </div>
 

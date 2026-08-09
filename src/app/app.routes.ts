@@ -10,7 +10,7 @@ export const routes: Routes = [
   { path: 'login', component: Login },
   { path: 'forgot-password', component: ForgotPassword },
 
-  // Dashboard layout avec sidebar + topbar
+  
   {
     path: 'dashboard',
     canActivate: [authGuard],

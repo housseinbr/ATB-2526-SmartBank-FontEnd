@@ -9,7 +9,7 @@
   position: fixed;
   left: 0;
   top: 0;
-  z-index: 1000;
+  z-index: 1150;
   transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -20,7 +20,7 @@
 /* ========== TOGGLE ========== */
 .sidebar__toggle {
   position: absolute;
-  top: 16px;
+  top: 50%;
   right: -14px;
   width: 28px;
   height: 28px;
@@ -32,10 +32,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10;
+  z-index: 1200;
   transition: all 0.2s ease;
   font-size: 10px;
   padding: 0;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  transform: translateY(-50%);
 }
 
 .sidebar__toggle:hover {
@@ -63,7 +65,7 @@
 }
 
 .sidebar--collapsed .sidebar__brand {
-  padding: 20px 12px;
+  padding: 22px 8px 18px;
   justify-content: center;
 }
 

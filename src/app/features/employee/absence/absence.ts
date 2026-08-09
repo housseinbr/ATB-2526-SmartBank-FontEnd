@@ -1,6 +1,6 @@
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { Icon } from '../../../shared/components/icon/icon';
 import { Toast, ToastType } from '../../../shared/components/toast/toast';
@@ -103,7 +103,7 @@ export class MesAbsences implements OnInit {
       dateEnd: ['', Validators.required],
       demiJournee: [null as DemiJournee | null],
       comment: [''],
-    });
+    }, { validators: [this.dateOrderValidator(), this.balanceLimitValidator()] });
   }
 
   ngOnInit(): void {
@@ -121,7 +121,10 @@ export class MesAbsences implements OnInit {
     this.userService.getUserById(sessionUser.id).pipe(
       finalize(() => this.loading.set(false))
     ).subscribe({
-      next: (user) => this.currentUser.set(user),
+      next: (user) => {
+        this.currentUser.set(user);
+        this.form.updateValueAndValidity({ emitEvent: false });
+      },
       error: () => this.notify('Impossible de charger votre solde', 'error'),
     });
 
@@ -164,22 +167,27 @@ export class MesAbsences implements OnInit {
   }
 
   submitForm(): void {
-    if (this.form.invalid) {
+    const value = this.form.getRawValue();
+    if (!value.type || !value.dateStart || !value.dateEnd) {
       this.form.markAllAsTouched();
+      this.notify('Veuillez remplir tous les champs obligatoires', 'error');
       return;
     }
 
-    const value = this.form.getRawValue();
     const dateStart = value.dateStart ?? '';
     const dateEnd = value.dateEnd ?? '';
 
-    if (!dateStart || !dateEnd) {
-      this.notify('Les dates de début et de fin sont obligatoires', 'error');
+    if (this.form.errors?.['dateOrder']) {
+      this.notify('La date de fin ne peut pas être avant la date de début', 'error');
       return;
     }
 
-    if (dateEnd < dateStart) {
-      this.notify('La date de fin ne peut pas être avant la date de début', 'error');
+    if (this.form.errors?.['insufficientBalance']) {
+      const requestedDays = this.form.errors['insufficientBalance'].requestedDays as number;
+      this.notify(
+        `Solde insuffisant: cette demande nécessite ${requestedDays.toFixed(2)} jour(s), mais votre solde actuel est de ${this.balance.toFixed(2)}.`,
+        'error'
+      );
       return;
     }
 
@@ -200,7 +208,10 @@ export class MesAbsences implements OnInit {
         this.notify(id ? 'Demande modifiée avec succès' : 'Demande envoyée avec succès', 'success');
         this.load();
       },
-      error: () => this.notify('Une erreur est survenue, veuillez réessayer', 'error'),
+      error: (error) => {
+        const message = error?.error?.message || error?.message || 'Une erreur est survenue, veuillez réessayer';
+        this.notify(message, 'error');
+      },
     });
   }
 
@@ -243,6 +254,20 @@ export class MesAbsences implements OnInit {
     return Math.min(100, Math.max(0, (this.balance / 22) * 100));
   }
 
+  get requestedDaysPreview(): number {
+    const value = this.form.getRawValue();
+    return this.calculateRequestedDays(value.dateStart ?? '', value.dateEnd ?? '', value.demiJournee ?? null);
+  }
+
+  get isBalanceInsufficient(): boolean {
+    const value = this.form.getRawValue();
+    if (!value.dateStart || !value.dateEnd) {
+      return false;
+    }
+
+    return this.calculateRequestedDays(value.dateStart, value.dateEnd, value.demiJournee ?? null) > this.balance;
+  }
+
   get currentUserLabel(): string {
     const current = this.currentUser();
     if (!current) return 'Collaborateur';
@@ -277,6 +302,25 @@ export class MesAbsences implements OnInit {
     return diffInDays === 1 ? '1 jour' : `${diffInDays} jours`;
   }
 
+  private calculateRequestedDays(dateStart: string, dateEnd: string, demiJournee: DemiJournee | null): number {
+    if (!dateStart || !dateEnd) {
+      return 0;
+    }
+
+    const start = new Date(dateStart);
+    const end = new Date(dateEnd);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+      return 0;
+    }
+
+    const diffInDays = Math.max(1, Math.round((end.getTime() - start.getTime()) / 86400000) + 1);
+    if (diffInDays === 1 && demiJournee) {
+      return 0.5;
+    }
+
+    return diffInDays;
+  }
+
   signedBalance(movement: HistorySold): string {
     const delta = movement.soldeAfter - movement.soldeBefore;
     const prefix = delta > 0 ? '+' : '';
@@ -301,5 +345,35 @@ export class MesAbsences implements OnInit {
     this.toastType.set(type);
     this.toastVisible.set(true);
     setTimeout(() => this.toastVisible.set(false), 3000);
+  }
+
+  private dateOrderValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const dateStart = control.get('dateStart')?.value as string | null;
+      const dateEnd = control.get('dateEnd')?.value as string | null;
+
+      if (!dateStart || !dateEnd) {
+        return null;
+      }
+
+      return dateEnd < dateStart ? { dateOrder: true } : null;
+    };
+  }
+
+  private balanceLimitValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const dateStart = control.get('dateStart')?.value as string | null;
+      const dateEnd = control.get('dateEnd')?.value as string | null;
+      const demiJournee = control.get('demiJournee')?.value as DemiJournee | null;
+
+      if (!dateStart || !dateEnd) {
+        return null;
+      }
+
+      const requestedDays = this.calculateRequestedDays(dateStart, dateEnd, demiJournee);
+      return requestedDays > this.balance
+        ? { insufficientBalance: { requestedDays, balance: this.balance } }
+        : null;
+    };
   }
 }
