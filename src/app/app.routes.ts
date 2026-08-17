@@ -112,6 +112,21 @@ export const routes: Routes = [
         loadComponent: () => import('./features/formations/formation-demandes-hub/formation-demandes-hub').then(m => m.FormationDemandesHub),
       },
       {
+        path: 'mobilite',
+        canActivate: [roleGuard(Role.EMPLOYE, Role.SUPERVISEUR, Role.ADMIN)],
+        loadComponent: () => import('./features/mobilite/mobilite-page').then(m => m.MobilitePage),
+      },
+      {
+        path: 'evaluations',
+        canActivate: [roleGuard(Role.EMPLOYE, Role.SUPERVISEUR, Role.ADMIN)],
+        loadComponent: () => import('./features/evaluations/evaluations-page').then(m => m.EvaluationsPage),
+      },
+      {
+        path: 'reconnaissance',
+        canActivate: [roleGuard(Role.EMPLOYE, Role.SUPERVISEUR, Role.ADMIN)],
+        loadComponent: () => import('./features/reconnaissance/reconnaissance-page').then(m => m.ReconnaissancePage),
+      },
+      {
         path: 'absences',
         canActivate: [roleGuard(Role.EMPLOYE, Role.SUPERVISEUR)],
         loadComponent: () => import('./features/employee/absence/absence').then(m => m.MesAbsences),

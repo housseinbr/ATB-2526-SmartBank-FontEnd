@@ -13,6 +13,7 @@ import {
   AddressData,
   AdministrativeData,
   BankAccountData,
+  ContractData,
   FamilySituationData,
   PersonChargeData,
   PersonUrgentData,
@@ -20,7 +21,7 @@ import {
 } from '../../core/models/profile-data';
 import { Role } from '../../core/models/role';
 
-type SectionKey = 'addresses' | 'bankAccount' | 'familySituation' | 'administrativeData' | 'dependents' | 'urgentContacts';
+type SectionKey = 'addresses' | 'bankAccount' | 'familySituation' | 'contract' | 'administrativeData' | 'dependents' | 'urgentContacts';
 
 @Component({
   selector: 'app-profile-data',
@@ -54,6 +55,7 @@ readonly sectionTabs: { key: SectionKey; label: string; icon: IconName }[] = [
   { key: 'addresses', label: 'Adresse', icon: 'search' },
   { key: 'bankAccount', label: 'Banque', icon: 'briefcase' },
   { key: 'familySituation', label: 'Famille', icon: 'users' },
+  { key: 'contract', label: 'Contrat', icon: 'file-text' },
   { key: 'administrativeData', label: 'Administratif', icon: 'file-text' },
   { key: 'dependents', label: 'À charge', icon: 'user' },
   { key: 'urgentContacts', label: 'Urgence', icon: 'bell' },
@@ -62,11 +64,13 @@ readonly sectionTabs: { key: SectionKey; label: string; icon: IconName }[] = [
   addressForm = signal<AddressData>({});
   bankForm = signal<BankAccountData>({});
   familyForm = signal<FamilySituationData>({});
+  contractForm = signal<ContractData>({});
   adminForm = signal<AdministrativeData>({});
   dependentForm = signal<PersonChargeData>({});
   urgentForm = signal<PersonUrgentData>({});
   bankDocumentFile = signal<File | null>(null);
   familyDocumentFile = signal<File | null>(null);
+  contractDocumentFile = signal<File | null>(null);
   adminDocumentFile = signal<File | null>(null);
   documentPreviewUrls = signal<Record<string, string>>({});
 
@@ -103,6 +107,7 @@ readonly sectionTabs: { key: SectionKey; label: string; icon: IconName }[] = [
       data?.addresses?.length ? 1 : 0,
       data?.bankAccount ? 1 : 0,
       data?.familySituation ? 1 : 0,
+      data?.contract ? 1 : 0,
       data?.administrativeData?.length ? 1 : 0,
       data?.dependents?.length ? 1 : 0,
       data?.urgentContacts?.length ? 1 : 0,
@@ -136,6 +141,8 @@ readonly sectionTabs: { key: SectionKey; label: string; icon: IconName }[] = [
         return data.bankAccount ? 1 : 0;
       case 'familySituation':
         return data.familySituation ? 1 : 0;
+      case 'contract':
+        return data.contract ? 1 : 0;
       case 'administrativeData':
         return data.administrativeData?.length ?? 0;
       case 'dependents':
@@ -216,6 +223,23 @@ readonly sectionTabs: { key: SectionKey; label: string; icon: IconName }[] = [
     this.modalOpen.set(true);
   }
 
+  openPrimaryAction(section: SectionKey) {
+    const data = this.data();
+    if (section === 'bankAccount' && data?.bankAccount) {
+      this.openEdit(section, data.bankAccount);
+      return;
+    }
+    if (section === 'familySituation' && data?.familySituation) {
+      this.openEdit(section, data.familySituation);
+      return;
+    }
+    if (section === 'contract' && data?.contract) {
+      this.openEdit(section, data.contract);
+      return;
+    }
+    this.openCreate(section);
+  }
+
   openEdit(section: SectionKey, item: any) {
     this.selectedSection.set(section);
     this.activeTab.set(section);
@@ -225,12 +249,19 @@ readonly sectionTabs: { key: SectionKey; label: string; icon: IconName }[] = [
         this.addressForm.set({ ...item });
         break;
       case 'bankAccount':
+        this.bankDocumentFile.set(null);
         this.bankForm.set({ ...item });
         break;
       case 'familySituation':
+        this.familyDocumentFile.set(null);
         this.familyForm.set({ ...item });
         break;
+      case 'contract':
+        this.contractDocumentFile.set(null);
+        this.contractForm.set({ ...item });
+        break;
       case 'administrativeData':
+        this.adminDocumentFile.set(null);
         this.adminForm.set({ ...item });
         break;
       case 'dependents':
@@ -255,6 +286,10 @@ readonly sectionTabs: { key: SectionKey; label: string; icon: IconName }[] = [
         this.familyForm.set({});
         this.familyDocumentFile.set(null);
         break;
+      case 'contract':
+        this.contractForm.set({});
+        this.contractDocumentFile.set(null);
+        break;
       case 'administrativeData':
         this.adminForm.set({});
         this.adminDocumentFile.set(null);
@@ -272,11 +307,13 @@ readonly sectionTabs: { key: SectionKey; label: string; icon: IconName }[] = [
     this.addressForm.set(data.addresses?.[0] ?? {});
     this.bankForm.set(data.bankAccount ?? {});
     this.familyForm.set(data.familySituation ?? {});
+    this.contractForm.set(data.contract ?? {});
     this.adminForm.set(data.administrativeData?.[0] ?? {});
     this.dependentForm.set(data.dependents?.[0] ?? {});
     this.urgentForm.set(data.urgentContacts?.[0] ?? {});
     this.bankDocumentFile.set(null);
     this.familyDocumentFile.set(null);
+    this.contractDocumentFile.set(null);
     this.adminDocumentFile.set(null);
   }
 
@@ -284,6 +321,7 @@ readonly sectionTabs: { key: SectionKey; label: string; icon: IconName }[] = [
     const items: Array<[string, string | null | undefined]> = [
       [this.documentName(data.bankAccount?.documentLink), data.bankAccount?.documentLink],
       [this.documentName(data.familySituation?.documentLink), data.familySituation?.documentLink],
+      [this.documentName(data.contract?.documentLink), data.contract?.documentLink],
       ...((data.administrativeData ?? []).map((item) => [this.documentName(item.documentLink), item.documentLink] as [string, string | null | undefined])),
     ];
 
@@ -325,6 +363,8 @@ readonly sectionTabs: { key: SectionKey; label: string; icon: IconName }[] = [
         return 'Compte bancaire';
       case 'familySituation':
         return 'Situation familiale';
+      case 'contract':
+        return 'Contrat';
       case 'administrativeData':
         return 'Données administratives';
       case 'dependents':
@@ -344,6 +384,8 @@ readonly sectionTabs: { key: SectionKey; label: string; icon: IconName }[] = [
         return 'Informations bancaires pour les virements.';
       case 'familySituation':
         return 'Situation familiale et document associé.';
+      case 'contract':
+        return 'Contrat de travail et document associé.';
       case 'administrativeData':
         return 'Statut RH, classification et qualification.';
       case 'dependents':
@@ -365,6 +407,8 @@ readonly sectionTabs: { key: SectionKey; label: string; icon: IconName }[] = [
         return !!data.bankAccount;
       case 'familySituation':
         return !!data.familySituation;
+      case 'contract':
+        return !!data.contract;
       case 'administrativeData':
         return (data.administrativeData?.length ?? 0) > 0;
       case 'dependents':
@@ -409,7 +453,9 @@ readonly sectionTabs: { key: SectionKey; label: string; icon: IconName }[] = [
     });
   }
 
-  private getCurrentPayload(section: SectionKey): AddressData | BankAccountData | FamilySituationData | AdministrativeData | PersonChargeData | PersonUrgentData | null {
+  private getCurrentPayload(
+    section: SectionKey
+  ): AddressData | BankAccountData | FamilySituationData | ContractData | AdministrativeData | PersonChargeData | PersonUrgentData | null {
     switch (section) {
       case 'addresses':
         return this.addressForm();
@@ -417,6 +463,8 @@ readonly sectionTabs: { key: SectionKey; label: string; icon: IconName }[] = [
         return this.bankForm();
       case 'familySituation':
         return this.familyForm();
+      case 'contract':
+        return this.contractForm();
       case 'administrativeData':
         return this.adminForm();
       case 'dependents':
@@ -436,6 +484,8 @@ readonly sectionTabs: { key: SectionKey; label: string; icon: IconName }[] = [
         return this.profileDataService.saveBankAccount(userId, payload, documentImage);
       case 'familySituation':
         return this.profileDataService.saveFamilySituation(userId, payload, documentImage);
+      case 'contract':
+        return this.profileDataService.saveContract(userId, payload, documentImage);
       case 'administrativeData':
         return this.profileDataService.saveAdministrativeData(userId, payload, documentImage);
       case 'dependents':
@@ -551,6 +601,13 @@ readonly sectionTabs: { key: SectionKey; label: string; icon: IconName }[] = [
     this.familyForm.update((current) => ({ ...current, [field]: value }));
   }
 
+  updateContractField(field: keyof ContractData, value: string | number) {
+    this.contractForm.update((current) => ({
+      ...current,
+      [field]: field === 'taux' ? (value === '' ? null : Number(value)) : value,
+    }));
+  }
+
   updateAdministrativeField(field: keyof AdministrativeData, value: string) {
     this.adminForm.update((current) => ({ ...current, [field]: value }));
   }
@@ -571,6 +628,10 @@ readonly sectionTabs: { key: SectionKey; label: string; icon: IconName }[] = [
     this.familyDocumentFile.set(this.extractFile(event));
   }
 
+  onContractDocumentSelected(event: Event) {
+    this.contractDocumentFile.set(this.extractFile(event));
+  }
+
   onAdminDocumentSelected(event: Event) {
     this.adminDocumentFile.set(this.extractFile(event));
   }
@@ -581,6 +642,8 @@ readonly sectionTabs: { key: SectionKey; label: string; icon: IconName }[] = [
         return this.bankDocumentFile();
       case 'familySituation':
         return this.familyDocumentFile();
+      case 'contract':
+        return this.contractDocumentFile();
       case 'administrativeData':
         return this.adminDocumentFile();
       default:
@@ -599,6 +662,8 @@ readonly sectionTabs: { key: SectionKey; label: string; icon: IconName }[] = [
         return data?.bankAccount?.documentLink ? this.formatDocumentPath(data.bankAccount.documentLink) : 'Aucune image choisie';
       case 'familySituation':
         return data?.familySituation?.documentLink ? this.formatDocumentPath(data.familySituation.documentLink) : 'Aucune image choisie';
+      case 'contract':
+        return data?.contract?.documentLink ? this.formatDocumentPath(data.contract.documentLink) : 'Aucune image choisie';
       case 'administrativeData':
         return data?.administrativeData?.[0]?.documentLink ? this.formatDocumentPath(data.administrativeData[0].documentLink) : 'Aucune image choisie';
       default:

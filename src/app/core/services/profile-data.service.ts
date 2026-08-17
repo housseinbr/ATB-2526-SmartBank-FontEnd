@@ -5,6 +5,7 @@ import { environment } from '../../../environments/environment';
 import { AuthService } from './auth.service';
 import {
   AddressData,
+  ContractData,
   AdministrativeData,
   BankAccountData,
   FamilySituationData,
@@ -76,6 +77,33 @@ export class ProfileDataService {
 
   deleteFamilySituation(userId: number): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${userId}/profile-data/family-situation`, {
+      headers: this.authHeaders(),
+    });
+  }
+
+  saveContract(userId: number, data: ContractData, documentImage?: File | null): Observable<ContractData> {
+    const formData = new FormData();
+    this.appendField(formData, 'nature', data.nature);
+    this.appendField(formData, 'typeContra', data.typeContra);
+    this.appendField(formData, 'dateStart', data.dateStart);
+    this.appendField(formData, 'dateEnd', data.dateEnd);
+    this.appendField(formData, 'typeTemp', data.typeTemp);
+    this.appendField(formData, 'dateAffectation', data.dateAffectation);
+    this.appendField(formData, 'post', data.post);
+    this.appendField(formData, 'emploi', data.emploi);
+    this.appendField(formData, 'taux', data.taux);
+    this.appendField(formData, 'lieu', data.lieu);
+    this.appendField(formData, 'documentLink', data.documentLink);
+    if (documentImage) {
+      formData.append('documentImage', documentImage);
+    }
+    return this.http.post<ContractData>(`${this.baseUrl}/${userId}/profile-data/contract/upload`, formData, {
+      headers: this.authHeaders(),
+    });
+  }
+
+  deleteContract(userId: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${userId}/profile-data/contract`, {
       headers: this.authHeaders(),
     });
   }

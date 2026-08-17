@@ -36,6 +36,21 @@ export interface FamilySituationData {
   documentLink?: string | null;
 }
 
+export interface ContractData {
+  idC?: number | null;
+  nature?: string | null;
+  typeContra?: string | null;
+  dateStart?: string | null;
+  dateEnd?: string | null;
+  typeTemp?: string | null;
+  dateAffectation?: string | null;
+  post?: string | null;
+  emploi?: string | null;
+  taux?: number | null;
+  lieu?: string | null;
+  documentLink?: string | null;
+}
+
 export interface PersonChargeData {
   idPerson?: number | null;
   name?: string | null;
@@ -58,6 +73,7 @@ export interface UserProfileData {
   bankAccount: BankAccountData | null;
   administrativeData: AdministrativeData[];
   familySituation: FamilySituationData | null;
+  contract: ContractData | null;
   dependents: PersonChargeData[];
   urgentContacts: PersonUrgentData[];
 }
