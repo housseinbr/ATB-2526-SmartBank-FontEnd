@@ -1,0 +1,12 @@
+<main class="assistant-page">
+  <section class="assistant-hero"><div><p>SMARTBANK · IA</p><h1>Assistant décisionnel</h1><span>Analyse, explication et préparation de demandes — toujours avec confirmation humaine.</span></div><button type="button" (click)="newConversation()"><span>＋</span> Nouvelle conversation</button></section>
+  <section class="chat-layout"><aside class="conversation-list"><div class="conversation-list__head"><strong>Conversations</strong><span>{{ conversations().length }}</span></div>@for (conversation of conversations(); track conversation.id) { <button type="button" (click)="openConversation(conversation)"><span class="conversation-list__dot"></span>{{ conversation.title }}</button> } @empty { <p>Vos échanges seront enregistrés ici.</p> }</aside><section class="chat-card">
+    <div class="suggestions"><span>Commencer rapidement</span><button type="button" (click)="ask('Quels critères faut-il vérifier avant de valider une absence ?')">✓ Vérifier une absence</button><button type="button" (click)="ask('Explique le rôle du superviseur dans le traitement des demandes.')">◌ Rôle du superviseur</button></div>
+    <div class="messages">
+      @for (message of messages(); track $index) { <article class="message" [class.message--user]="message.role === 'user'">{{ message.text }}</article> }
+      @if (loading()) { <article class="message">Analyse en cours…</article> }
+    </div>
+    @if (waitingConfirmation() && absenceDraft(); as draft) { <div class="absence-draft"><strong>Demande prête</strong><span>{{ draft.dateStart }} → {{ draft.dateEnd }} · {{ draft.type }}</span><button type="button" (click)="confirmAbsence()">Confirmer la demande</button><button type="button" class="cancel" (click)="cancelAbsence()">Annuler</button></div> }
+    <form class="composer" (ngSubmit)="send()"><textarea name="prompt" [(ngModel)]="prompt" placeholder="Ex. Explique les critères à vérifier avant d’approuver une absence."></textarea><button type="submit" [disabled]="loading() || !prompt.trim()">Envoyer</button></form>
+  </section></section>
+</main>

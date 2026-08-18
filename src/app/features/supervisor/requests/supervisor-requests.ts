@@ -8,6 +8,7 @@ import { Toast, ToastType } from '../../../shared/components/toast/toast';
 import { AlertComponent } from '../../../shared/components/alert/alert';
 import { Icon } from '../../../shared/components/icon/icon';
 import { Absence, StatusAbsence, STATUS_COLORS, STATUS_LABELS, TYPE_ABSENCE_LABELS } from '../../../core/models/absence';
+import { AiLeaveRecommendation, AiService } from '../../../core/services/ai.service';
 
 @Component({
   selector: 'app-supervisor-requests',
@@ -19,6 +20,9 @@ import { Absence, StatusAbsence, STATUS_COLORS, STATUS_LABELS, TYPE_ABSENCE_LABE
 export class SupervisorRequests implements OnInit {
   requests = signal<Absence[]>([]);
   loading = signal(false);
+  aiLoading = signal(false);
+  aiRecommendation = signal<AiLeaveRecommendation | null>(null);
+  aiRequestId = signal<number | null>(null);
   statusFilter = signal<'ALL' | StatusAbsence>('ALL');
 
   toastMessage = signal('');
@@ -37,7 +41,8 @@ export class SupervisorRequests implements OnInit {
 
   constructor(
     private absenceApi: AbsenceApiService,
-    private authService: AuthService
+    private authService: AuthService,
+    private aiService: AiService
   ) {}
 
   ngOnInit(): void {
@@ -91,6 +96,17 @@ export class SupervisorRequests implements OnInit {
         error: (error) => this.showToast(error?.error?.message ?? 'Action impossible', 'error'),
       });
     };
+  }
+
+  analyzeWithAi(request: Absence): void {
+    if (!request.idAbcance) return;
+    this.aiLoading.set(true);
+    this.aiRecommendation.set(null);
+    this.aiRequestId.set(request.idAbcance);
+    this.aiService.leaveRecommendation(request.idAbcance).pipe(finalize(() => this.aiLoading.set(false))).subscribe({
+      next: (recommendation) => this.aiRecommendation.set(recommendation),
+      error: (error) => this.showToast(error?.error?.message ?? 'Analyse IA indisponible', 'error'),
+    });
   }
 
   onAlertConfirm(): void {

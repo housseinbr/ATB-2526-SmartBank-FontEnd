@@ -1,0 +1,8 @@
+@if (open()) {
+  <section class="ai-chat" aria-label="Assistant IA">
+    <header><div><strong>Assistant IA</strong><span>Conseil uniquement</span></div><button type="button" (click)="open.set(false)" aria-label="Fermer">×</button></header>
+    <div class="ai-chat__messages">@for (message of messages(); track $index) { <p [class.user]="message.role === 'user'">{{ message.text }}</p> } @if (loading()) { <p>Analyse en cours…</p> }</div>
+    <form (ngSubmit)="send()"><textarea name="prompt" [(ngModel)]="prompt" placeholder="Écrivez votre question…"></textarea><button type="submit" [disabled]="loading() || !prompt.trim()">Envoyer</button></form>
+  </section>
+}
+<button class="ai-fab" type="button" (click)="open.set(!open())" [attr.aria-expanded]="open()">IA</button>

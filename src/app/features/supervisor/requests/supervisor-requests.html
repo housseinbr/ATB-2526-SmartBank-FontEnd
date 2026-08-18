@@ -131,6 +131,7 @@
                   <td>
                     @if (isPending(request)) {
                       <div class="actions">
+                        <button class="action-btn action-btn--ai" (click)="analyzeWithAi(request)">Analyse IA</button>
                         <button class="action-btn action-btn--success" (click)="decide(request, StatusAbsence.VALIDE)">Valider</button>
                         <button class="action-btn action-btn--danger" (click)="decide(request, StatusAbsence.REFUSE)">Refuser</button>
                       </div>
@@ -147,6 +148,28 @@
     </div>
 
     <div class="side-stack">
+      <div class="data-card ai-card">
+        <div class="data-card__header">
+          <div>
+            <h2 class="data-card__title">Assistant IA</h2>
+            <span class="data-card__subtitle">Recommandation seulement — décision humaine requise</span>
+          </div>
+        </div>
+        @if (aiLoading()) {
+          <div class="empty-state">Analyse de la demande en cours…</div>
+        } @else if (aiRecommendation(); as analysis) {
+          <div class="ai-card__body">
+            <span class="ai-card__recommendation" [class]="'ai-card__recommendation--' + analysis.recommendation.toLowerCase()">{{ analysis.recommendation }}</span>
+            <strong>Confiance : {{ analysis.confidence | percent:'1.0-0' }} · Risque : {{ analysis.risk }}</strong>
+            <p>{{ analysis.ai_explanation }}</p>
+            @for (reason of analysis.reasons; track reason) { <div class="ai-card__reason">✓ {{ reason }}</div> }
+            @for (risk of analysis.risks; track risk) { <div class="ai-card__risk">! {{ risk }}</div> }
+          </div>
+        } @else {
+          <div class="empty-state">Sélectionnez « Analyse IA » sur une demande en attente.</div>
+        }
+      </div>
+
       <div class="data-card">
         <div class="data-card__header">
           <div>

@@ -378,6 +378,16 @@
   font-size: 0.8125rem;
 }
 
+.action-btn--ai { background: #ede9fe; color: #5b21b6; }
+.ai-card__body { display: grid; gap: 0.7rem; padding: 1rem 1.25rem 1.25rem; }
+.ai-card__body p { margin: 0; color: var(--text-secondary); font-size: 0.9rem; }
+.ai-card__recommendation { width: fit-content; padding: 0.35rem 0.6rem; border-radius: 999px; font-size: 0.78rem; font-weight: 800; }
+.ai-card__recommendation--approve { background: var(--status-approved-bg); color: var(--status-approved); }
+.ai-card__recommendation--reject { background: var(--status-refused-bg); color: var(--status-refused); }
+.ai-card__recommendation--review { background: var(--status-pending-bg); color: var(--status-pending); }
+.ai-card__reason { color: #166534; font-size: 0.86rem; }
+.ai-card__risk { color: #b45309; font-size: 0.86rem; }
+
 .mini-grid {
   padding: 0.9rem 1rem 1rem;
   display: flex;

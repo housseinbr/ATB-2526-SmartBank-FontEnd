@@ -152,6 +152,11 @@ export const routes: Routes = [
         path: 'notifications',
         loadComponent: () => import('./features/notifications/notifications').then(m => m.NotificationsPage),
       },
+      {
+        path: 'ai-assistant',
+        canActivate: [roleGuard(Role.SUPERVISEUR, Role.ADMIN)],
+        loadComponent: () => import('./features/ai-assistant/ai-assistant').then(m => m.AiAssistant),
+      },
       { path: '', redirectTo: 'employe', pathMatch: 'full' },
 
     ],

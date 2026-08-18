@@ -26,6 +26,7 @@ export const SIDEBAR_CONFIG: Record<Role, SidebarConfig> = {
       { label: 'Competences', route: '/dashboard/competances', icon: 'award' },
       { label: 'Calendrier', route: '/dashboard/admin/calendrier', icon: 'calendar' },
       { label: 'Commentaires', route: '/dashboard/comments', icon: 'file-text' },
+      { label: 'Assistant IA', route: '/dashboard/ai-assistant', icon: 'activity' },
     ],
   },
   [Role.SUPERVISEUR]: {
@@ -43,6 +44,7 @@ export const SIDEBAR_CONFIG: Record<Role, SidebarConfig> = {
       { label: 'Demandes formations', route: '/dashboard/formation-demandes', icon: 'inbox' },
       { label: 'Competences', route: '/dashboard/competances', icon: 'award' },
       { label: 'Commentaires', route: '/dashboard/comments', icon: 'file-text' },
+      { label: 'Assistant IA', route: '/dashboard/ai-assistant', icon: 'activity' },
     ],
   },
   [Role.EMPLOYE]: {
@@ -59,6 +61,5 @@ export const SIDEBAR_CONFIG: Record<Role, SidebarConfig> = {
     ],
   },
 };
-
 
 
