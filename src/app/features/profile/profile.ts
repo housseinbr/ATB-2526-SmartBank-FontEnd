@@ -10,6 +10,8 @@ import { Role } from '../../core/models/role';
 import { Icon } from '../../shared/components/icon/icon';
 import { Toast, ToastType } from '../../shared/components/toast/toast';
 import { HistorySold } from '../../core/models/absence';
+import { CompetanceService } from '../../core/services/competance.service';
+import { Competance } from '../../core/models/competance';
 
 @Component({
   selector: 'app-profile',
@@ -22,11 +24,13 @@ export class Profile {
   private authService = inject(AuthService);
   private userService = inject(UserService);
   private absenceApi = inject(AbsenceApiService);
+  private competanceService = inject(CompetanceService);
   readonly Role = Role;
   readonly initialLeave = 22;
 
   user = signal<UserResponse | null>(null);
   history = signal<HistorySold[]>([]);
+  competances = signal<Competance[]>([]);
   loading = signal(false);
   error = signal<string | null>(null);
   saving = signal(false);
@@ -53,6 +57,8 @@ export class Profile {
   leaveBalance = computed(() => this.user()?.solde ?? this.initialLeave);
   leaveUsed = computed(() => Math.max(0, this.initialLeave - this.leaveBalance()));
   leaveProgress = computed(() => Math.min(100, (this.leaveBalance() / this.initialLeave) * 100));
+  recentHistory = computed(() => this.history().slice(0, 3));
+  competenceDomains = computed(() => new Set(this.competances().map((item) => item.formation?.domain).filter(Boolean)).size);
 
   get initials(): string {
     const u = this.user();
@@ -150,6 +156,7 @@ export class Profile {
           this.user.set(u);
           this.error.set(null);
           this.loadHistory();
+          this.loadCompetances();
         },
         error: (err) => {
           this.error.set('Erreur lors du chargement du profil');
@@ -165,6 +172,13 @@ export class Profile {
     this.absenceApi.getMineHistory().subscribe({
       next: (items) => this.history.set(items),
       error: (err) => console.error(err),
+    });
+  }
+
+  loadCompetances() {
+    this.competanceService.getMine().subscribe({
+      next: (items) => this.competances.set(items),
+      error: () => this.competances.set([]),
     });
   }
 

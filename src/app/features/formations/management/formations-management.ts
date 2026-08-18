@@ -25,6 +25,7 @@ export class FormationsManagement implements OnInit {
   readonly loading = signal(false);
   readonly search = signal('');
   readonly selectedFormation = signal<Formation | null>(null);
+  readonly formOpen = signal(false);
   readonly isSaving = signal(false);
 
   readonly toastMessage = signal('');
@@ -95,6 +96,17 @@ export class FormationsManagement implements OnInit {
     });
   }
 
+  openCreate(): void {
+    this.startCreate();
+    this.formOpen.set(true);
+  }
+
+  closeForm(): void {
+    if (!this.isSaving()) {
+      this.formOpen.set(false);
+    }
+  }
+
   startEdit(item: Formation): void {
     this.selectedFormation.set(item);
     this.form.patchValue({
@@ -106,6 +118,7 @@ export class FormationsManagement implements OnInit {
       lieu: item.lieu,
       unite: item.unite,
     });
+    this.formOpen.set(true);
   }
 
   save(): void {
@@ -126,6 +139,7 @@ export class FormationsManagement implements OnInit {
       next: () => {
         this.showToast(this.selectedFormation() ? 'Formation mise a jour' : 'Formation creee', 'success');
         this.startCreate();
+        this.formOpen.set(false);
         this.load();
       },
       error: (error) => this.showToast(error?.error?.message ?? 'Action impossible', 'error'),

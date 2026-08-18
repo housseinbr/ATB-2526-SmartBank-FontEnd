@@ -1,108 +1,47 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
-import { Icon } from '../../shared/components/icon/icon';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { Role } from '../../core/models/role';
+import { RequestDocumentType, RequestStatus } from '../../core/models/rh-requests';
+import { AuthService } from '../../core/services/auth.service';
+import { RecognitionRequest, ReconnaissanceService } from '../../core/services/reconnaissance.service';
+import { Toast, ToastType } from '../../shared/components/toast/toast';
 
 @Component({
-  selector: 'app-reconnaissance-page',
-  standalone: true,
-  imports: [CommonModule, Icon],
+  selector: 'app-reconnaissance-page', standalone: true, imports: [CommonModule, FormsModule, Toast],
   template: `
-    <section class="page-shell">
-      <header class="hero">
-        <div>
-          <p class="eyebrow">Espace reconnaissance</p>
-          <h1>Certificats et badges</h1>
-          <p>Une zone dédiée aux demandes de badges ou d’attestations, sans confusion avec les absences.</p>
-        </div>
-        <button class="hero-action"><app-icon name="plus" [size]="16" /> Nouvelle demande</button>
-      </header>
-
-      <div class="stats">
-        @for (stat of stats; track stat.label) {
-          <article class="stat-card">
-            <app-icon [name]="stat.icon" [size]="18" />
-            <div>
-              <strong>{{ stat.value }}</strong>
-              <span>{{ stat.label }}</span>
-            </div>
-          </article>
-        }
-      </div>
-
-      <div class="grid">
-        <article class="card">
-          <div class="card__head">
-            <div>
-              <h2>Demandes de reconnaissance</h2>
-              <p>Le superviseur ou l’administrateur peut valider avant génération du PDF.</p>
-            </div>
-          </div>
-          <div class="list">
-            @for (item of items; track item.title) {
-              <div class="list-item">
-                <div>
-                  <strong>{{ item.title }}</strong>
-                  <p>{{ item.meta }}</p>
-                </div>
-                <span class="pill">{{ item.status }}</span>
-              </div>
-            }
-          </div>
-        </article>
-
-        <article class="card">
-          <div class="card__head">
-            <div>
-              <h2>Génération PDF</h2>
-              <p>Le document final est archivé dans une table dédiée.</p>
-            </div>
-          </div>
-          <div class="quick-stack">
-            <div class="quick-item">Valider la demande</div>
-            <div class="quick-item">Générer l’attestation ou le badge en PDF</div>
-            <div class="quick-item">Enregistrer le fichier généré</div>
-          </div>
-        </article>
-      </div>
-    </section>
-  `,
-  styles: [`
-    :host { display:block; min-height: calc(100vh - 64px); background: radial-gradient(circle at top left, rgba(201, 43, 65, 0.08), transparent 36%), #f5f6fb; color:#0f172a; }
-    .page-shell { padding: 28px; display: grid; gap: 18px; }
-    .hero, .card, .stat-card { background:#fff; border:1px solid rgba(15,23,42,.08); border-radius:20px; box-shadow: 0 18px 48px rgba(15,23,42,.06); }
-    .hero { padding: 28px; display:flex; align-items:flex-start; justify-content:space-between; gap:20px; }
-    .eyebrow { margin:0 0 8px; text-transform:uppercase; letter-spacing:.18em; font-size:12px; font-weight:800; color:#c0263f; }
-    h1, h2 { margin:0; }
-    h1 { font-size: clamp(28px, 4vw, 42px); line-height:1.05; }
-    .hero p { margin:10px 0 0; color:#64748b; max-width: 60ch; }
-    .hero-action { border:0; border-radius:16px; padding:14px 18px; background:#c6233d; color:#fff; font-weight:800; display:inline-flex; align-items:center; gap:8px; box-shadow:0 14px 30px rgba(198,35,61,.22); }
-    .stats { display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-    .stat-card { padding:18px; display:flex; gap:14px; align-items:center; }
-    .stat-card app-icon { color:#c6233d; }
-    .stat-card strong { display:block; font-size:28px; line-height:1; }
-    .stat-card span { color:#64748b; font-size:14px; }
-    .grid { display:grid; grid-template-columns: 1.4fr .9fr; gap:14px; }
-    .card { padding: 18px; }
-    .card__head p { margin:6px 0 0; color:#64748b; }
-    .list { margin-top:16px; display:grid; gap:10px; }
-    .list-item, .quick-item { border:1px solid rgba(15,23,42,.08); border-radius:16px; background:#fafafa; padding:14px 16px; }
-    .list-item { display:flex; justify-content:space-between; gap:12px; align-items:center; }
-    .list-item p { margin:4px 0 0; color:#64748b; font-size:13px; }
-    .pill { border-radius:999px; background:#fff1f3; color:#9f1239; padding:6px 10px; font-weight:700; font-size:12px; }
-    .quick-stack { margin-top:16px; display:grid; gap:10px; }
-    .quick-item { color:#334155; font-weight:600; }
-    @media (max-width: 1100px) { .stats, .grid { grid-template-columns: 1fr; } .hero { flex-direction:column; } }
-  `],
+    <app-toast [message]="toastMessage()" [type]="toastType()" [visible]="toastVisible()" />
+    <main class="workspace">
+      <header class="hero"><div><span class="eyebrow">ATB · SERVICES COLLABORATEURS</span><h1>Attestations et badges</h1><p>Suivez vos demandes et accédez aux documents validés.</p></div><button class="primary" (click)="openModal()">+ Nouvelle demande</button></header>
+      <section class="stats"><article><span>Demandes</span><strong>{{ requests().length }}</strong><small>Total de votre espace</small></article><article><span>En attente</span><strong>{{ pendingCount() }}</strong><small>À traiter</small></article><article><span>Documents générés</span><strong>{{ generatedCount() }}</strong><small>Disponibles au téléchargement</small></article><article><span>Taux de traitement</span><strong>{{ treatmentRate() }}%</strong><div class="meter"><i [style.width.%]="treatmentRate()"></i></div></article></section>
+      <section class="content"><article class="panel"><div class="panel-head"><div><h2>{{ canManage() ? 'Demandes à traiter et mes demandes' : 'Mes demandes' }}</h2><p>Historique et statut en temps réel.</p></div><span class="count">{{ requests().length }}</span></div>
+        <div class="request" *ngFor="let r of requests()"><div class="document-icon">{{ r.type === 'BADGE' ? 'ID' : 'AT' }}</div><div class="request-info"><b>{{ r.type === 'BADGE' ? 'Badge professionnel' : 'Attestation de travail' }}</b><span>{{ r.user.firstName }} {{ r.user.lastName }} · {{ formatDate(r.date) }}</span><small>{{ r.motif || 'Aucun motif indiqué' }}</small></div><span class="status" [class.pending]="r.status === Status.EN_ATTENTE" [class.accepted]="r.status === Status.VALIDE" [class.refused]="r.status === Status.REFUSE">{{ label(r.status) }}</span><div class="actions"><a *ngIf="r.pdfLink" class="secondary" [href]="documentUrl(r.pdfLink)" target="_blank">Ouvrir PDF</a><ng-container *ngIf="canDecide(r)"><button class="approve" (click)="decide(r.idDemandeReconnaissance, Status.VALIDE)">Valider</button><button class="reject" (click)="decide(r.idDemandeReconnaissance, Status.REFUSE)">Refuser</button></ng-container></div></div>
+        <div class="empty" *ngIf="!requests().length">Aucune demande pour le moment.</div></article>
+        <aside class="panel side"><h2>Processus ATB</h2><ol><li><b>1. Demande</b><span>Le collaborateur précise son besoin.</span></li><li><b>2. Validation</b><span>Le responsable vérifie la demande.</span></li><li><b>3. Document</b><span>Le PDF officiel est généré et disponible.</span></li></ol></aside></section>
+    </main>
+    <div class="overlay" *ngIf="modalOpen()" (click)="closeModal()"><form class="modal" (click)="$event.stopPropagation()" (ngSubmit)="create()"><div class="modal-head"><div><span class="eyebrow">NOUVELLE DEMANDE</span><h2>Document collaborateur</h2></div><button type="button" class="close" (click)="closeModal()">×</button></div><label>Type de document<select name="type" [(ngModel)]="type"><option [ngValue]="DocumentType.ATTESTATION">Attestation de travail</option><option [ngValue]="DocumentType.BADGE">Badge professionnel</option></select></label><label>Motif (facultatif)<textarea name="motif" [(ngModel)]="motif" placeholder="Ex. démarche administrative, renouvellement du badge…"></textarea></label><footer><button type="button" class="secondary" (click)="closeModal()">Annuler</button><button class="primary">Envoyer la demande</button></footer></form></div>`,
+  styles: [`:host{display:block;background:#f5f7fa;color:#1e293b;min-height:100%}.workspace{max-width:1280px;margin:auto;padding:32px}.hero{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}.eyebrow{color:#a4182a;font-size:11px;font-weight:800;letter-spacing:.12em}h1{margin:6px 0;font-size:32px}h2{margin:0;font-size:18px}.hero p,.panel-head p{margin:4px 0;color:#64748b}.primary,.approve,.reject,.secondary{border:0;border-radius:8px;padding:10px 14px;font-weight:700;cursor:pointer;text-decoration:none;font-size:13px}.primary,.approve{background:#a4182a;color:#fff}.reject{background:#fff;color:#a4182a;border:1px solid #fecdd3}.secondary{background:#fff;color:#334155;border:1px solid #cbd5e1}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}.stats article,.panel{background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 8px 22px #0f172a08}.stats article{padding:16px}.stats span,.stats small{display:block;color:#64748b;font-size:12px}.stats strong{font-size:28px;margin:4px 0;display:block}.meter{height:6px;background:#f1f5f9;border-radius:9px;overflow:hidden;margin-top:11px}.meter i{display:block;height:100%;background:#a4182a}.content{display:grid;grid-template-columns:1fr 280px;gap:18px}.panel{padding:18px}.panel-head{display:flex;justify-content:space-between;align-items:start;border-bottom:1px solid #e2e8f0;padding-bottom:15px}.count{border-radius:99px;background:#fdf2f4;color:#a4182a;padding:5px 9px;font-weight:800}.request{display:flex;gap:12px;align-items:center;padding:15px 0;border-bottom:1px solid #eef2f7}.document-icon{width:38px;height:38px;display:grid;place-items:center;border-radius:9px;background:#fdf2f4;color:#a4182a;font-weight:800;font-size:12px}.request-info{flex:1;min-width:0}.request-info b,.request-info span,.request-info small{display:block}.request-info span,.request-info small{font-size:12px;color:#64748b;margin-top:3px}.status{font-size:11px;font-weight:800;padding:6px 8px;border-radius:99px}.pending{background:#fff7ed;color:#c2410c}.accepted{background:#ecfdf3;color:#15803d}.refused{background:#fef2f2;color:#b91c1c}.actions{display:flex;gap:6px}.side ol{padding:0;margin:18px 0;list-style:none}.side li{padding:13px 0;border-bottom:1px solid #eef2f7}.side li span{display:block;color:#64748b;font-size:13px;margin-top:3px}.empty{padding:35px;text-align:center;color:#64748b}.overlay{position:fixed;inset:0;background:#0f172a88;z-index:1000;display:grid;place-items:center;padding:20px}.modal{width:min(520px,100%);background:#fff;border-radius:14px;padding:22px;box-shadow:0 24px 70px #0004}.modal-head,footer{display:flex;justify-content:space-between;align-items:center}.close{border:0;background:transparent;font-size:27px;color:#64748b}.modal label{display:block;font-size:13px;font-weight:700;margin-top:18px}.modal select,.modal textarea{box-sizing:border-box;width:100%;margin-top:6px;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font:inherit}.modal textarea{height:100px;resize:vertical}footer{margin-top:22px;justify-content:flex-end;gap:8px}@media(max-width:800px){.stats{grid-template-columns:repeat(2,1fr)}.content{grid-template-columns:1fr}.side{display:none}.request{flex-wrap:wrap}}@media(max-width:500px){.workspace{padding:18px}.hero{align-items:start;gap:12px;flex-direction:column}.stats{grid-template-columns:1fr 1fr}.actions{width:100%}}`]
 })
-export class ReconnaissancePage {
-  readonly stats = [
-    { label: 'Demandes', value: '0', icon: 'file-text' as const },
-    { label: 'En attente', value: '0', icon: 'inbox' as const },
-    { label: 'PDF générés', value: '0', icon: 'award' as const },
-  ];
-
-  readonly items = [
-    { title: 'Attestation de travail', meta: 'Validation puis génération du PDF final', status: 'En attente' },
-    { title: 'Badge professionnel', meta: 'Demande de badge pour usage interne', status: 'À traiter' },
-  ];
+export class ReconnaissancePage implements OnInit {
+  private api = inject(ReconnaissanceService); private auth = inject(AuthService);
+  readonly Status = RequestStatus; readonly DocumentType = RequestDocumentType;
+  readonly canManage = computed(() => this.auth.hasRole(Role.ADMIN, Role.SUPERVISEUR));
+  readonly requests = signal<RecognitionRequest[]>([]); readonly modalOpen = signal(false);
+  readonly toastMessage = signal(''); readonly toastType = signal<ToastType>('success'); readonly toastVisible = signal(false);
+  type: RequestDocumentType = RequestDocumentType.ATTESTATION; motif = '';
+  readonly pendingCount = computed(() => this.requests().filter(x => x.status === RequestStatus.EN_ATTENTE).length);
+  readonly generatedCount = computed(() => this.requests().filter(x => !!x.pdfLink).length);
+  readonly treatmentRate = computed(() => this.requests().length ? Math.round((this.requests().length - this.pendingCount()) * 100 / this.requests().length) : 0);
+  ngOnInit(){ this.load(); }
+  load(){ (this.canManage() ? this.api.managed() : this.api.mine()).subscribe({next:x=>this.requests.set(x),error:()=>this.toast('Impossible de charger les demandes.','error')}); }
+  canDecide(request: RecognitionRequest){
+    const currentUser = this.auth.currentUser();
+    return this.canManage() && request.status === RequestStatus.EN_ATTENTE &&
+      (currentUser?.role === Role.ADMIN || request.user?.id !== currentUser?.id);
+  }
+  openModal(){ this.modalOpen.set(true); } closeModal(){ this.modalOpen.set(false); }
+  create(){ this.api.request(this.type,this.motif).subscribe({next:()=>{this.closeModal();this.motif='';this.toast('Votre demande a été envoyée.');this.load();},error:()=>this.toast('La demande n’a pas pu être envoyée.','error')}); }
+  decide(id:number, decision:RequestStatus){ this.api.decide(id,decision).subscribe({next:()=>{this.toast(decision===RequestStatus.VALIDE?'Demande validée et document généré.':'Demande refusée.');this.load();},error:()=>this.toast('La décision n’a pas pu être enregistrée.','error')}); }
+  toast(message:string,type:ToastType='success'){this.toastMessage.set(message);this.toastType.set(type);this.toastVisible.set(true);window.setTimeout(()=>this.toastVisible.set(false),2800);}
+  label(s:RequestStatus){return s===RequestStatus.VALIDE?'Validée':s===RequestStatus.REFUSE?'Refusée':'En attente';} formatDate(d:string){return new Intl.DateTimeFormat('fr-FR',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(d));} documentUrl(path:string){return this.api.documentUrl(path);}
 }

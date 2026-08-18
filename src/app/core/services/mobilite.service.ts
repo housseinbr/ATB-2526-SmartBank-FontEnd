@@ -15,6 +15,10 @@ export class MobiliteService {
     return this.http.get<MobiliteItem[]>(`${this.baseUrl}/mobilites`, { headers: this.authHeaders() });
   }
 
+  create(mobilite: Omit<MobiliteItem, 'idMobilter'>): Observable<MobiliteItem> {
+    return this.http.post<MobiliteItem>(`${this.baseUrl}/mobilites`, mobilite, { headers: this.authHeaders() });
+  }
+
   getMine(): Observable<MobiliteRequest[]> {
     return this.http.get<MobiliteRequest[]>(`${this.baseUrl}/demandes-mobilites/me`, { headers: this.authHeaders() });
   }
@@ -31,7 +35,7 @@ export class MobiliteService {
     return this.http.post<MobiliteRequest>(`${this.baseUrl}/demandes-mobilites/mobilite/${mobiliteId}`, {}, { headers: this.authHeaders() });
   }
 
-  decide(id: number, decision: RequestStatus): Observable<MobiliteRequest> {
+  decide(id: number, decision: RequestStatus | string): Observable<MobiliteRequest> {
     return this.http.patch<MobiliteRequest>(`${this.baseUrl}/demandes-mobilites/${id}/decision/${decision}`, {}, { headers: this.authHeaders() });
   }
 

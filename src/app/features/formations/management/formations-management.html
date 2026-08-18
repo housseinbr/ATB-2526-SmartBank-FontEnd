@@ -12,66 +12,22 @@
   />
 
   <section class="content-grid">
-    <form class="panel form-panel" [formGroup]="form" (ngSubmit)="save()">
-      <div class="panel__head">
-        <div>
-          <p class="eyebrow">Gestion des formations</p>
-          <h2>{{ selectedFormation() ? 'Modifier la formation' : 'Ajouter une formation' }}</h2>
-          <p>Les champs obligatoires permettent de garder le catalogue propre et exploitable.</p>
-        </div>
-      </div>
-
-      <div class="field-grid">
-        <label>
-          <span>Titre</span>
-          <input type="text" formControlName="title" placeholder="Ex: Communication professionnelle" />
-        </label>
-        <label>
-          <span>Offre</span>
-          <textarea rows="4" formControlName="offreFormation" placeholder="Resume ou detail de l'offre"></textarea>
-        </label>
-        <label>
-          <span>Domaine</span>
-          <input type="text" formControlName="domain" placeholder="Ex: Finance, RH, IT" />
-        </label>
-        <label>
-          <span>Theme</span>
-          <input type="text" formControlName="theme" placeholder="Ex: Leadership" />
-        </label>
-        <label>
-          <span>Duree</span>
-          <input type="number" min="1" formControlName="duree" />
-        </label>
-        <label>
-          <span>Unite</span>
-          <input type="text" formControlName="unite" placeholder="Jour, heure, semaine" />
-        </label>
-      </div>
-
-      <label class="full">
-        <span>Lieu</span>
-        <input type="text" formControlName="lieu" placeholder="Ex: Tunis / En ligne" />
-      </label>
-
-      <div class="form-actions">
-        <button class="secondary-btn" type="button" (click)="startCreate()">Reinitialiser</button>
-        <button class="primary-btn" type="submit" [disabled]="isSaving()">
-          <app-icon name="check" [size]="14" />
-          {{ isSaving() ? 'Enregistrement...' : 'Enregistrer' }}
-        </button>
-      </div>
-    </form>
-
     <div class="panel list-panel">
       <div class="panel__head panel__head--row">
         <div>
           <p class="eyebrow">Catalogue</p>
           <h2>Rechercher, ouvrir ou supprimer une fiche formation.</h2>
         </div>
-        <label class="search">
-          <app-icon name="search" [size]="14" />
-          <input type="search" placeholder="Rechercher..." (input)="onSearch($event)" />
-        </label>
+        <div class="catalogue-actions">
+          <label class="search">
+            <app-icon name="search" [size]="14" />
+            <input type="search" placeholder="Rechercher..." (input)="onSearch($event)" />
+          </label>
+          <button class="primary-btn" type="button" (click)="openCreate()">
+            <app-icon name="plus" [size]="14" />
+            Ajouter une formation
+          </button>
+        </div>
       </div>
 
       @if (loading()) {
@@ -110,4 +66,38 @@
       }
     </div>
   </section>
+
+  @if (formOpen()) {
+    <div class="overlay" role="presentation" (click)="closeForm()">
+      <form class="modal" [formGroup]="form" (ngSubmit)="save()" (click)="$event.stopPropagation()">
+        <div class="modal__head">
+          <div>
+            <p class="eyebrow">Gestion des formations</p>
+            <h2>{{ selectedFormation() ? 'Modifier la formation' : 'Ajouter une formation' }}</h2>
+            <p>Renseignez les informations qui apparaîtront dans le catalogue.</p>
+          </div>
+          <button class="close-btn" type="button" aria-label="Fermer le formulaire" (click)="closeForm()">×</button>
+        </div>
+
+        <div class="field-grid">
+          <label><span>Titre</span><input type="text" formControlName="title" placeholder="Ex: Communication professionnelle" /></label>
+          <label><span>Domaine</span><input type="text" formControlName="domain" placeholder="Ex: Finance, RH, IT" /></label>
+          <label><span>Thème</span><input type="text" formControlName="theme" placeholder="Ex: Leadership" /></label>
+          <label><span>Lieu</span><input type="text" formControlName="lieu" placeholder="Ex: Tunis / En ligne" /></label>
+          <label><span>Durée</span><input type="number" min="1" formControlName="duree" /></label>
+          <label><span>Unité</span><input type="text" formControlName="unite" placeholder="Jour, heure, semaine" /></label>
+        </div>
+
+        <label class="full"><span>Offre</span><textarea rows="4" formControlName="offreFormation" placeholder="Résumé ou détail de l'offre"></textarea></label>
+
+        <div class="form-actions">
+          <button class="secondary-btn" type="button" (click)="closeForm()">Annuler</button>
+          <button class="primary-btn" type="submit" [disabled]="isSaving()">
+            <app-icon name="check" [size]="14" />
+            {{ isSaving() ? 'Enregistrement...' : 'Enregistrer' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  }
 </div>

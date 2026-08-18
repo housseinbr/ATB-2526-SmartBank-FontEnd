@@ -5,11 +5,13 @@ export enum RequestDocumentType {
   ATTESTATION = 'ATTESTATION',
 }
 
-export enum RequestStatus {
-  VALIDE = 'VALIDE',
-  REFUSE = 'REFUSE',
-  EN_ATTENTE = 'EN_ATTENTE',
-}
+export const RequestStatus = {
+  VALIDE: 'VALIDE',
+  REFUSE: 'REFUSE',
+  EN_ATTENTE: 'EN_ATTENTE',
+} as const;
+
+export type RequestStatus = (typeof RequestStatus)[keyof typeof RequestStatus];
 
 export interface RhRequest {
   idDemande: number;
@@ -32,8 +34,8 @@ export interface MobiliteItem {
 
 export interface MobiliteRequest {
   idDemande: number;
-  mobilite: MobiliteItem;
-  user: UserResponse;
+  mobilite: MobiliteItem | null;
+  user: UserResponse | null;
   status: RequestStatus;
   date: string;
 }

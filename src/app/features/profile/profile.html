@@ -185,7 +185,7 @@
 
       <div class="profile-card">
         <div class="card-header">
-          <h2><app-icon name="activity" [size]="18" /> Statistiques rapides</h2>
+          <h2><app-icon name="activity" [size]="18" /> Suivi du solde</h2>
         </div>
         <div class="card-body">
           <div class="stat-item">
@@ -196,6 +196,39 @@
             <span class="stat-number">{{ leaveUsed() | number:'1.0-0' }}</span>
             <span class="stat-label">Jours consommés</span>
           </div>
+          <div class="profile-follow-up">
+            <span>{{ history().length }} mouvement(s) enregistré(s)</span>
+            @for (item of recentHistory(); track item.idHistorySold) {
+              <div class="profile-follow-up__row">
+                <span>{{ formatHistoryDate(item.dateAction) }}</span>
+                <strong>{{ item.motif }}</strong>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-card">
+        <div class="card-header">
+          <h2><app-icon name="award" [size]="18" /> Compétences</h2>
+        </div>
+        <div class="card-body">
+          <div class="competence-summary">
+            <div><strong>{{ competances().length }}</strong><span>formation(s) validée(s)</span></div>
+            <div><strong>{{ competenceDomains() }}</strong><span>domaine(s)</span></div>
+          </div>
+          @if (competances().length) {
+            <div class="competence-list">
+              @for (item of competances().slice(0, 3); track item.idCompetance) {
+                <div class="competence-list__item">
+                  <span>{{ item.formation.domain }}</span>
+                  <strong>{{ item.formation.title }}</strong>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="profile-empty">Aucune compétence validée pour le moment.</p>
+          }
         </div>
       </div>
 

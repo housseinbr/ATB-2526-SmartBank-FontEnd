@@ -1,114 +1,18 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
-import { Icon } from '../../shared/components/icon/icon';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { Role } from '../../core/models/role';
+import { RequestStatus } from '../../core/models/rh-requests';
+import { AuthService } from '../../core/services/auth.service';
+import { EvaluationItem, EvaluationService } from '../../core/services/evaluation.service';
+import { UserService } from '../../core/services/user.service';
+import { UserResponse } from '../../core/models/user-response';
+import { Toast, ToastType } from '../../shared/components/toast/toast';
 
-@Component({
-  selector: 'app-evaluations-page',
-  standalone: true,
-  imports: [CommonModule, Icon],
-  template: `
-    <section class="page-shell">
-      <header class="hero">
-        <div>
-          <p class="eyebrow">Espace évaluations</p>
-          <h1>Évaluer les collaborateurs</h1>
-          <p>Une vue courte pour poser une évaluation, la mettre en attente et la valider rapidement.</p>
-        </div>
-        <button class="hero-action"><app-icon name="plus" [size]="16" /> Nouvelle évaluation</button>
-      </header>
-
-      <div class="stats">
-        @for (stat of stats; track stat.label) {
-          <article class="stat-card">
-            <app-icon [name]="stat.icon" [size]="18" />
-            <div>
-              <strong>{{ stat.value }}</strong>
-              <span>{{ stat.label }}</span>
-            </div>
-          </article>
-        }
-      </div>
-
-      <div class="grid">
-        <article class="card">
-          <div class="card__head">
-            <div>
-              <h2>Évaluations en attente</h2>
-              <p>Le superviseur peut accepter ou refuser après lecture.</p>
-            </div>
-          </div>
-          <div class="list">
-            @for (item of items; track item.title) {
-              <div class="list-item">
-                <div>
-                  <strong>{{ item.title }}</strong>
-                  <p>{{ item.meta }}</p>
-                </div>
-                <div class="actions">
-                  <span class="pill pill--soft">{{ item.status }}</span>
-                  <button class="mini-btn">Ouvrir</button>
-                </div>
-              </div>
-            }
-          </div>
-        </article>
-
-        <article class="card">
-          <div class="card__head">
-            <div>
-              <h2>Décision rapide</h2>
-              <p>Un flux simple pour garder le traitement lisible.</p>
-            </div>
-          </div>
-          <div class="quick-stack">
-            <div class="quick-item">Rédiger la note d’évaluation</div>
-            <div class="quick-item">Mettre en attente si compléments nécessaires</div>
-            <div class="quick-item">Valider ou refuser la demande</div>
-          </div>
-        </article>
-      </div>
-    </section>
-  `,
-  styles: [`
-    :host { display:block; min-height: calc(100vh - 64px); background: radial-gradient(circle at top left, rgba(201, 43, 65, 0.08), transparent 36%), #f5f6fb; color:#0f172a; }
-    .page-shell { padding: 28px; display: grid; gap: 18px; }
-    .hero, .card, .stat-card { background:#fff; border:1px solid rgba(15,23,42,.08); border-radius:20px; box-shadow: 0 18px 48px rgba(15,23,42,.06); }
-    .hero { padding: 28px; display:flex; align-items:flex-start; justify-content:space-between; gap:20px; }
-    .eyebrow { margin:0 0 8px; text-transform:uppercase; letter-spacing:.18em; font-size:12px; font-weight:800; color:#c0263f; }
-    h1, h2 { margin:0; }
-    h1 { font-size: clamp(28px, 4vw, 42px); line-height:1.05; }
-    .hero p { margin:10px 0 0; color:#64748b; max-width: 60ch; }
-    .hero-action { border:0; border-radius:16px; padding:14px 18px; background:#c6233d; color:#fff; font-weight:800; display:inline-flex; align-items:center; gap:8px; box-shadow:0 14px 30px rgba(198,35,61,.22); }
-    .stats { display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-    .stat-card { padding:18px; display:flex; gap:14px; align-items:center; }
-    .stat-card app-icon { color:#c6233d; }
-    .stat-card strong { display:block; font-size:28px; line-height:1; }
-    .stat-card span { color:#64748b; font-size:14px; }
-    .grid { display:grid; grid-template-columns: 1.4fr .9fr; gap:14px; }
-    .card { padding: 18px; }
-    .card__head p { margin:6px 0 0; color:#64748b; }
-    .list { margin-top:16px; display:grid; gap:10px; }
-    .list-item, .quick-item { border:1px solid rgba(15,23,42,.08); border-radius:16px; background:#fafafa; padding:14px 16px; }
-    .list-item { display:flex; justify-content:space-between; gap:12px; align-items:center; }
-    .list-item p { margin:4px 0 0; color:#64748b; font-size:13px; }
-    .actions { display:flex; align-items:center; gap:10px; }
-    .pill { border-radius:999px; padding:6px 10px; font-weight:700; font-size:12px; }
-    .pill--soft { background:#ecfdf3; color:#166534; }
-    .mini-btn { border:1px solid rgba(15,23,42,.1); background:#fff; border-radius:999px; padding:6px 12px; font-weight:700; }
-    .quick-stack { margin-top:16px; display:grid; gap:10px; }
-    .quick-item { color:#334155; font-weight:600; }
-    @media (max-width: 1100px) { .stats, .grid { grid-template-columns: 1fr; } .hero { flex-direction:column; } }
-  `],
-})
-export class EvaluationsPage {
-  readonly stats = [
-    { label: 'En attente', value: '0', icon: 'inbox' as const },
-    { label: 'Acceptées', value: '0', icon: 'check' as const },
-    { label: 'Refusées', value: '0', icon: 'x' as const },
-  ];
-
-  readonly items = [
-    { title: 'Évaluation annuelle', meta: 'Note, commentaire et décision finale', status: 'En attente' },
-    { title: 'Évaluation de période d’essai', meta: 'Lecture rapide et validation simple', status: 'En attente' },
-  ];
-}
+@Component({selector:'app-evaluations-page',standalone:true,imports:[CommonModule,FormsModule,Toast],template:`
+<app-toast [message]="toastMessage()" [type]="toastType()" [visible]="toastVisible()" />
+<main class="workspace"><header class="hero"><div><span class="eyebrow">ATB · MANAGEMENT DES TALENTS</span><h1>Évaluations</h1><p>Préparez, suivez et validez les évaluations de performance.</p></div><button *ngIf="canManage()" class="primary" (click)="openModal()">+ Nouvelle évaluation</button></header>
+<section class="stats"><article><span>Évaluations</span><strong>{{items().length}}</strong><small>Dans votre périmètre</small></article><article><span>En attente</span><strong>{{pendingCount()}}</strong><small>Décision à prendre</small></article><article><span>Validées</span><strong>{{acceptedCount()}}</strong><small>Évaluations finalisées</small></article><article><span>Traitement</span><strong>{{rate()}}%</strong><div class="meter"><i [style.width.%]="rate()"></i></div></article></section>
+<section class="content"><article class="panel"><div class="panel-head"><div><h2>{{canManage()?'Évaluations à gérer':'Mes évaluations'}}</h2><p>Historique et décisions de performance.</p></div><span class="count">{{items().length}}</span></div><div class="row" *ngFor="let e of items()"><div class="avatar">{{initials(e.user?.firstName,e.user?.lastName)}}</div><div class="info"><b>{{e.title}}</b><span>{{e.user?.firstName}} {{e.user?.lastName}} · {{formatDate(e.date)}} · {{e.lieu || 'ATB'}}</span><small>{{e.desc}}</small></div><span class="status" [class.pending]="e.status===Status.EN_ATTENTE" [class.accepted]="e.status===Status.VALIDE" [class.refused]="e.status===Status.REFUSE">{{label(e.status)}}</span><div class="actions" *ngIf="canManage()&&e.status===Status.EN_ATTENTE"><button class="approve" (click)="decide(e.idEvaluation,Status.VALIDE)">Valider</button><button class="reject" (click)="decide(e.idEvaluation,Status.REFUSE)">Refuser</button></div></div><div class="empty" *ngIf="!items().length">Aucune évaluation disponible.</div></article><aside class="panel side"><h2>Cycle d’évaluation</h2><ol><li><b>1. Préparation</b><span>Le responsable affecte une évaluation.</span></li><li><b>2. Consultation</b><span>Le collaborateur voit son statut.</span></li><li><b>3. Décision</b><span>Validation ou refus par le responsable.</span></li></ol></aside></section></main>
+<div class="overlay" *ngIf="modalOpen()" (click)="closeModal()"><form class="modal" (click)="$event.stopPropagation()" (ngSubmit)="create()"><div class="modal-head"><div><span class="eyebrow">NOUVELLE ÉVALUATION</span><h2>Affecter une évaluation</h2></div><button type="button" class="close" (click)="closeModal()">×</button></div><label>Collaborateur<select required name="user" [(ngModel)]="selectedUser"><option [ngValue]="0">Sélectionner un collaborateur</option><option *ngFor="let u of team()" [ngValue]="u.id">{{u.firstName}} {{u.lastName}}</option></select></label><div class="two"><label>Titre<input required name="title" [(ngModel)]="draft.title" placeholder="Ex. Évaluation annuelle"></label><label>Lieu<input name="lieu" [(ngModel)]="draft.lieu" placeholder="Agence / siège"></label></div><label>Date<input type="date" name="date" [(ngModel)]="draft.date"></label><label>Commentaire<textarea required name="desc" [(ngModel)]="draft.desc" placeholder="Objectifs, résultats et observations…"></textarea></label><footer><button type="button" class="secondary" (click)="closeModal()">Annuler</button><button class="primary">Mettre en attente</button></footer></form></div>`,styles:[`:host{display:block;background:#f5f7fa;color:#1e293b;min-height:100%}.workspace{max-width:1280px;margin:auto;padding:32px}.hero{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}.eyebrow{color:#a4182a;font-size:11px;font-weight:800;letter-spacing:.12em}h1{margin:6px 0;font-size:32px}h2{margin:0;font-size:18px}.hero p,.panel-head p{margin:4px 0;color:#64748b}.primary,.approve,.reject,.secondary{border:0;border-radius:8px;padding:10px 14px;font-weight:700;cursor:pointer;text-decoration:none;font-size:13px}.primary,.approve{background:#a4182a;color:#fff}.reject{background:#fff;color:#a4182a;border:1px solid #fecdd3}.secondary{background:#fff;color:#334155;border:1px solid #cbd5e1}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}.stats article,.panel{background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 8px 22px #0f172a08}.stats article{padding:16px}.stats span,.stats small{display:block;color:#64748b;font-size:12px}.stats strong{font-size:28px;margin:4px 0;display:block}.meter{height:6px;background:#f1f5f9;border-radius:9px;overflow:hidden;margin-top:11px}.meter i{display:block;height:100%;background:#a4182a}.content{display:grid;grid-template-columns:1fr 280px;gap:18px}.panel{padding:18px}.panel-head{display:flex;justify-content:space-between;align-items:start;border-bottom:1px solid #e2e8f0;padding-bottom:15px}.count{border-radius:99px;background:#fdf2f4;color:#a4182a;padding:5px 9px;font-weight:800}.row{display:flex;gap:12px;align-items:center;padding:15px 0;border-bottom:1px solid #eef2f7}.avatar{width:38px;height:38px;display:grid;place-items:center;border-radius:50%;background:#fdf2f4;color:#a4182a;font-weight:800}.info{flex:1}.info b,.info span,.info small{display:block}.info span,.info small{font-size:12px;color:#64748b;margin-top:3px}.status{font-size:11px;font-weight:800;padding:6px 8px;border-radius:99px}.pending{background:#fff7ed;color:#c2410c}.accepted{background:#ecfdf3;color:#15803d}.refused{background:#fef2f2;color:#b91c1c}.actions{display:flex;gap:6px}.side ol{padding:0;margin:18px 0;list-style:none}.side li{padding:13px 0;border-bottom:1px solid #eef2f7}.side li span{display:block;color:#64748b;font-size:13px;margin-top:3px}.empty{padding:35px;text-align:center;color:#64748b}.overlay{position:fixed;inset:0;background:#0f172a88;z-index:1000;display:grid;place-items:center;padding:20px}.modal{width:min(560px,100%);background:#fff;border-radius:14px;padding:22px;box-shadow:0 24px 70px #0004}.modal-head,footer{display:flex;justify-content:space-between;align-items:center}.close{border:0;background:transparent;font-size:27px;color:#64748b}.modal label{display:block;font-size:13px;font-weight:700;margin-top:15px}.modal input,.modal select,.modal textarea{box-sizing:border-box;width:100%;margin-top:6px;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font:inherit}.modal textarea{height:90px;resize:vertical}.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}footer{margin-top:22px;justify-content:flex-end;gap:8px}@media(max-width:800px){.stats{grid-template-columns:repeat(2,1fr)}.content{grid-template-columns:1fr}.side{display:none}.row{flex-wrap:wrap}}@media(max-width:500px){.workspace{padding:18px}.hero{align-items:start;gap:12px;flex-direction:column}.stats,.two{grid-template-columns:1fr 1fr}.two{gap:8px}.actions{width:100%}}`]})
+export class EvaluationsPage implements OnInit{private api=inject(EvaluationService);private auth=inject(AuthService);private users=inject(UserService);readonly Status=RequestStatus;readonly canManage=computed(()=>this.auth.hasRole(Role.ADMIN,Role.SUPERVISEUR));readonly items=signal<EvaluationItem[]>([]);readonly team=signal<UserResponse[]>([]);readonly modalOpen=signal(false);readonly toastMessage=signal('');readonly toastType=signal<ToastType>('success');readonly toastVisible=signal(false);selectedUser=0;draft={title:'',desc:'',lieu:'',date:''};readonly pendingCount=computed(()=>this.items().filter(x=>x.status===RequestStatus.EN_ATTENTE).length);readonly acceptedCount=computed(()=>this.items().filter(x=>x.status===RequestStatus.VALIDE).length);readonly rate=computed(()=>this.items().length?Math.round((this.items().length-this.pendingCount())*100/this.items().length):0);ngOnInit(){this.load();if(this.canManage()){const id=(this.auth.currentUser() as any)?.id;const source=this.auth.hasRole(Role.SUPERVISEUR)&&id?this.users.getSubordonnes(id):this.users.getAllUsers();source.subscribe({next:x=>this.team.set(x.filter(u=>u.role===Role.EMPLOYE)),error:()=>this.toast('Impossible de charger les collaborateurs.','error')})}}load(){(this.canManage()?this.api.managed():this.api.mine()).subscribe({next:x=>this.items.set(x),error:()=>this.toast('Impossible de charger les évaluations.','error')})}openModal(){this.modalOpen.set(true)}closeModal(){this.modalOpen.set(false)}create(){if(!this.selectedUser){this.toast('Veuillez sélectionner un collaborateur.','error');return}this.api.create(this.selectedUser,this.draft).subscribe({next:()=>{this.closeModal();this.selectedUser=0;this.draft={title:'',desc:'',lieu:'',date:''};this.toast('Évaluation créée et mise en attente.');this.load()},error:()=>this.toast('Création impossible.','error')})}decide(id:number,d:RequestStatus){this.api.decide(id,d).subscribe({next:()=>{this.toast(d===RequestStatus.VALIDE?'Évaluation validée.':'Évaluation refusée.');this.load()},error:()=>this.toast('Décision impossible.','error')})}toast(m:string,t:ToastType='success'){this.toastMessage.set(m);this.toastType.set(t);this.toastVisible.set(true);window.setTimeout(()=>this.toastVisible.set(false),2800)}label(s:RequestStatus){return s===RequestStatus.VALIDE?'Validée':s===RequestStatus.REFUSE?'Refusée':'En attente'}formatDate(d:string){return new Intl.DateTimeFormat('fr-FR',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(d))}initials(a?:string,b?:string){return `${a?.[0]??''}${b?.[0]??''}`.toUpperCase()}}

@@ -61,11 +61,13 @@ export const routes: Routes = [
           },
           {
             path: 'formation-lab',
-            loadComponent: () => import('./features/formations/formations-hub/formations-hub').then(m => m.FormationsHub),
+            redirectTo: 'formations',
+            pathMatch: 'full',
           },
           {
             path: 'mes-formations',
-            loadComponent: () => import('./features/formations/formation-demandes-hub/formation-demandes-hub').then(m => m.FormationDemandesHub),
+            redirectTo: 'formation-demandes',
+            pathMatch: 'full',
           },
           {
             path: 'competances',
@@ -88,13 +90,13 @@ export const routes: Routes = [
       },
       {
         path: 'formation-lab',
-        canActivate: [roleGuard(Role.EMPLOYE, Role.SUPERVISEUR, Role.ADMIN)],
-        loadComponent: () => import('./features/formations/lab/formation-lab').then(m => m.FormationLab),
+        redirectTo: 'formations',
+        pathMatch: 'full',
       },
       {
         path: 'mes-formations',
-        canActivate: [roleGuard(Role.EMPLOYE, Role.SUPERVISEUR, Role.ADMIN)],
-        loadComponent: () => import('./features/formations/my-formations/my-formations').then(m => m.MyFormations),
+        redirectTo: 'formation-demandes',
+        pathMatch: 'full',
       },
       {
         path: 'competances',

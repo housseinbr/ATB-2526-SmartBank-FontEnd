@@ -18,9 +18,41 @@
     </div>
   </section>
 
-  @if (canManage()) {
+  @if (canSelect() || canManage()) {
+    @if (canSelect()) {
+    <section class="selection-notice" aria-label="Droit de sélection des formations">
+      <div class="selection-notice__icon" aria-hidden="true">✓</div>
+      <div>
+        <strong>Vous pouvez choisir vos formations</strong>
+        <p>Chaque sélection crée une demande personnelle qui sera suivie dans « Suivi formations ».</p>
+      </div>
+    </section>
+    }
+
+    <nav class="formation-tabs" aria-label="Navigation des formations">
+      @if (canSelect()) {
+        <button type="button" [class.is-active]="activeView() === 'catalogue'" (click)="showView('catalogue')">
+          Choisir une formation
+        </button>
+      }
+      @if (canManage()) {
+        <button type="button" [class.is-active]="activeView() === 'gestion'" (click)="showView('gestion')">
+          Ajouter une formation
+        </button>
+      }
+      @if (canSelect()) {
+        <button type="button" [class.is-active]="activeView() === 'suivi'" (click)="showView('suivi')">
+          Mes demandes et statuts
+        </button>
+      }
+    </nav>
+  }
+
+  @if (activeView() === 'gestion' || (!canSelect() && canManage())) {
     <app-formations-management />
-  } @else {
+  } @else if (activeView() === 'suivi') {
+    <app-my-formations />
+  } @else if (canSelect()) {
     <app-formation-lab />
   }
 </div>

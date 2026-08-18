@@ -2,6 +2,15 @@
   <app-toast [message]="toastMessage()" [type]="toastType()" [visible]="toastVisible()" />
 
   <section class="panel">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">Catalogue partagé</p>
+        <h2>Choisissez une formation</h2>
+        <p>Votre demande sera envoyée pour validation et visible dans votre suivi.</p>
+      </div>
+      <span class="catalogue-count">{{ filteredFormations().length }} disponible(s)</span>
+    </div>
+
     <label class="search">
       <app-icon name="search" [size]="14" />
       <input type="search" placeholder="Rechercher une formation..." (input)="onSearch($event)" />

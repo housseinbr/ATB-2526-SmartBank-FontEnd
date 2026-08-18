@@ -1,12 +1,24 @@
 <div class="page">
   <app-toast [message]="toastMessage()" [type]="toastType()" [visible]="toastVisible()" />
 
+  <section class="requests-header">
+    <div>
+      <p class="eyebrow">Suivi personnel</p>
+      <h2>Mes demandes de formation</h2>
+      <p>Consultez en temps réel la décision prise pour chaque formation choisie.</p>
+    </div>
+    <div class="requests-summary" aria-label="Résumé des demandes">
+      <span><strong>{{ grouped().pending.length }}</strong> en attente</span>
+      <span><strong>{{ grouped().accepted.length }}</strong> acceptée(s)</span>
+    </div>
+  </section>
+
   @if (loading()) {
     <div class="empty-state">Chargement...</div>
   } @else {
     <section class="columns">
       <article class="column">
-        <h2>En attente</h2>
+        <h3><span class="status-dot status-dot--pending"></span>En attente</h3>
         @for (item of grouped().pending; track item.idDemandeFormation) {
           <div class="card status-orange">
             <div class="card__head">
@@ -14,7 +26,7 @@
               <span class="badge orange">{{ labels[item.status] }}</span>
             </div>
             <p>{{ item.formation.domain }} - {{ item.formation.theme }}</p>
-            <span class="meta">{{ formatDate(item.date) }}</span>
+            <span class="meta">Demande envoyée le {{ formatDate(item.date) }}</span>
           </div>
         } @empty {
           <div class="empty-state">Aucune demande en attente.</div>
@@ -22,7 +34,7 @@
       </article>
 
       <article class="column">
-        <h2>Acceptées</h2>
+        <h3><span class="status-dot status-dot--accepted"></span>Acceptées</h3>
         @for (item of grouped().accepted; track item.idDemandeFormation) {
           <div class="card status-green">
             <div class="card__head">
@@ -30,7 +42,7 @@
               <span class="badge green">{{ labels[item.status] }}</span>
             </div>
             <p>{{ item.formation.domain }} - {{ item.formation.theme }}</p>
-            <span class="meta">{{ formatDate(item.date) }}</span>
+            <span class="meta">Demande envoyée le {{ formatDate(item.date) }}</span>
           </div>
         } @empty {
           <div class="empty-state">Aucune demande acceptée.</div>
@@ -38,7 +50,7 @@
       </article>
 
       <article class="column">
-        <h2>Refusées</h2>
+        <h3><span class="status-dot status-dot--refused"></span>Refusées</h3>
         @for (item of grouped().refused; track item.idDemandeFormation) {
           <div class="card status-red">
             <div class="card__head">
@@ -46,7 +58,7 @@
               <span class="badge red">{{ labels[item.status] }}</span>
             </div>
             <p>{{ item.formation.domain }} - {{ item.formation.theme }}</p>
-            <span class="meta">{{ formatDate(item.date) }}</span>
+            <span class="meta">Demande envoyée le {{ formatDate(item.date) }}</span>
           </div>
         } @empty {
           <div class="empty-state">Aucune demande refusée.</div>

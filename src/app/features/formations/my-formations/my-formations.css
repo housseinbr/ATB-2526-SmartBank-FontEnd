@@ -1,7 +1,44 @@
 .page {
   display: grid;
-  gap: 1.2rem;
+  gap: var(--space-4);
 }
+
+.requests-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: var(--space-5);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.requests-header h2 { margin: 0; font-size: 1.25rem; }
+
+.requests-header > div > p:last-child {
+  margin: 0.35rem 0 0;
+  color: var(--text-secondary);
+}
+
+.requests-summary {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.55rem;
+}
+
+.requests-summary span {
+  padding: 0.5rem 0.65rem;
+  border-radius: 999px;
+  background: var(--bg-surface-soft);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.requests-summary strong { color: var(--text-primary); }
 
 .hero {
   padding: 1.5rem;
@@ -34,25 +71,34 @@
 }
 
 .column {
-  padding: 1rem;
-  border-radius: 22px;
-  background: #fff;
-  border: 1px solid #e5e7eb;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-soft);
 }
 
-.column h2 {
+.column h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   margin: 0 0 1rem;
   font-size: 1.05rem;
 }
+
+.status-dot { width: 0.6rem; height: 0.6rem; border-radius: 50%; }
+.status-dot--pending { background: var(--status-pending); }
+.status-dot--accepted { background: var(--status-approved); }
+.status-dot--refused { background: var(--status-refused); }
 
 .card {
   display: grid;
   gap: 0.45rem;
   margin-bottom: 0.8rem;
   padding: 0.95rem;
-  border-radius: 16px;
-  border: 1px solid #e5e7eb;
-  background: #fafafa;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface-soft);
 }
 
 .status-orange { box-shadow: inset 4px 0 0 #d97706; }
@@ -105,4 +151,9 @@
   .columns {
     grid-template-columns: 1fr;
   }
+}
+
+@media (max-width: 720px) {
+  .requests-header { flex-direction: column; }
+  .requests-summary { justify-content: flex-start; }
 }
