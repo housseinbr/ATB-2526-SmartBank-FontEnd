@@ -21,8 +21,8 @@ export const SIDEBAR_CONFIG: Record<Role, SidebarConfig> = {
       { label: 'Mobilité', route: '/dashboard/mobilite', icon: 'activity' },
       { label: 'Évaluations', route: '/dashboard/evaluations', icon: 'check' },
       { label: 'Reconnaissance', route: '/dashboard/reconnaissance', icon: 'award' },
-      { label: 'Catalogue formations', route: '/dashboard/formations', icon: 'book-open' },
-      { label: 'Suivi formations', route: '/dashboard/formation-demandes', icon: 'inbox' },
+      { label: 'Formations', route: '/dashboard/formations', icon: 'book-open' },
+      { label: 'Demandes formations', route: '/dashboard/formation-demandes', icon: 'inbox' },
       { label: 'Competences', route: '/dashboard/competances', icon: 'award' },
       { label: 'Calendrier', route: '/dashboard/admin/calendrier', icon: 'calendar' },
       { label: 'Commentaires', route: '/dashboard/comments', icon: 'file-text' },
@@ -39,8 +39,8 @@ export const SIDEBAR_CONFIG: Record<Role, SidebarConfig> = {
       { label: 'Évaluations', route: '/dashboard/evaluations', icon: 'check' },
       { label: 'Reconnaissance', route: '/dashboard/reconnaissance', icon: 'award' },
       { label: 'Calendrier', route: '/dashboard/superviseur/calendrier', icon: 'calendar' },
-      { label: 'Catalogue formations', route: '/dashboard/formations', icon: 'book-open' },
-      { label: 'Suivi formations', route: '/dashboard/formation-demandes', icon: 'inbox' },
+      { label: 'Formations', route: '/dashboard/formations', icon: 'book-open' },
+      { label: 'Demandes formations', route: '/dashboard/formation-demandes', icon: 'inbox' },
       { label: 'Competences', route: '/dashboard/competances', icon: 'award' },
       { label: 'Commentaires', route: '/dashboard/comments', icon: 'file-text' },
     ],
@@ -54,12 +54,11 @@ export const SIDEBAR_CONFIG: Record<Role, SidebarConfig> = {
       { label: 'Mobilité', route: '/dashboard/mobilite', icon: 'activity' },
       { label: 'Évaluations', route: '/dashboard/evaluations', icon: 'check' },
       { label: 'Reconnaissance', route: '/dashboard/reconnaissance', icon: 'award' },
-      { label: 'Catalogue formations', route: '/dashboard/formations', icon: 'book-open' },
-      { label: 'Suivi formations', route: '/dashboard/formation-demandes', icon: 'inbox' },
       { label: 'Competences', route: '/dashboard/competances', icon: 'award' },
       { label: 'Commentaires', route: '/dashboard/comments', icon: 'file-text' },
     ],
   },
 };
+
 
 
