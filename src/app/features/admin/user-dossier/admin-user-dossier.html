@@ -1,0 +1,65 @@
+<main class="dossier">
+  <a class="back" routerLink="/dashboard/admin/users">← Retour aux utilisateurs</a>
+
+  <header class="dossier-head">
+    <div class="avatar">{{ initials() }}</div>
+    <div>
+      <p class="eyebrow">DOSSIER ADMINISTRATEUR</p>
+      <h1>{{ fullName() }}</h1>
+      <p>{{ userMeta() }}</p>
+    </div>
+    <a class="edit" routerLink="/dashboard/admin/users">Modifier dans la liste</a>
+  </header>
+
+  <nav class="tabs" aria-label="Sections du dossier utilisateur">
+    @for (item of [{key:'overview',label:'Vue générale'},{key:'competences',label:'Compétences'},{key:'evaluations',label:'Évaluations'},{key:'mobilite',label:'Mobilité'},{key:'ai',label:'Historique IA'},{key:'data',label:'Données'}]; track item.key) {
+      <button type="button" [class.active]="tab() === item.key" (click)="select($any(item.key))">{{ item.label }}</button>
+    }
+  </nav>
+
+  @if (tab() === 'overview') {
+    <section class="cards">
+      <article><span>Compétences</span><strong>{{ competances().length }}</strong><small>Profil professionnel</small></article>
+      <article><span>Évaluations</span><strong>{{ evaluations().length }}</strong><small>Suivi performance</small></article>
+      <article><span>Mobilités</span><strong>{{ mobilities().length }}</strong><small>Candidatures</small></article>
+      <article><span>Conversations IA</span><strong>{{ conversations().length }}</strong><small>Historique assistant</small></article>
+    </section>
+  }
+
+  @if (tab() === 'competences') {
+    <section class="panel"><h2>Compétences de l’utilisateur</h2>
+      @for (item of competances(); track item.idCompetance) { <div class="row"><strong>{{ item.formation.title }}</strong><span>{{ item.formation.domain }} · {{ item.formation.theme }}</span></div> }
+      @empty { <p class="empty">Aucune compétence enregistrée.</p> }
+    </section>
+  }
+  @if (tab() === 'evaluations') {
+    <section class="panel"><h2>Évaluations</h2>
+      @for (item of evaluations(); track item.idEvaluation) { <div class="row"><strong>{{ item.title }}</strong><span>{{ item.date }} · {{ item.status }}</span></div> }
+      @empty { <p class="empty">Aucune évaluation.</p> }
+    </section>
+  }
+  @if (tab() === 'mobilite') {
+    <section class="panel"><h2>Mobilité</h2>
+      @for (item of mobilities(); track item.idDemande) { <div class="row"><strong>{{ item.mobilite?.post }}</strong><span>{{ item.date }} · {{ item.status }}</span></div> }
+      @empty { <p class="empty">Aucune demande de mobilité.</p> }
+    </section>
+  }
+  @if (tab() === 'ai') {
+    <section class="panel"><h2>Historique des conversations IA</h2>
+      @for (item of conversations(); track item.id) { <div class="row"><strong>{{ item.title }}</strong><span>{{ item.updatedAt }}</span></div> }
+      @empty { <p class="empty">Aucune conversation.</p> }
+    </section>
+  }
+  @if (tab() === 'data') {
+    @if (profileData(); as data) {
+      <section class="data-grid">
+        <article class="data-card"><h2>Identité et contact</h2><div class="data-list"><div><span>Nom complet</span><strong>{{ data.user.firstName }} {{ data.user.lastName }}</strong></div><div><span>Identifiant</span><strong>#{{ data.user.id }}</strong></div><div><span>CIN</span><strong>{{ data.user.cin }}</strong></div><div><span>Téléphone</span><strong>{{ valueOrDash(data.user.numTel) }}</strong></div><div><span>Email</span><strong>{{ data.user.email }}</strong></div></div></article>
+        <article class="data-card"><h2>Situation professionnelle</h2><div class="data-list"><div><span>Rôle</span><strong>{{ data.user.role }}</strong></div><div><span>Statut</span><strong>{{ data.user.actif }}</strong></div><div><span>Solde de congés</span><strong>{{ data.user.solde }} jour(s)</strong></div><div><span>Salaire</span><strong>{{ data.user.salaire }} DT</strong></div><div><span>Superviseur</span><strong>{{ data.user.superviseur?.firstName ?? '—' }} {{ data.user.superviseur?.lastName ?? '' }}</strong></div></div></article>
+        <article class="data-card"><h2>Adresses</h2>@for (address of data.addresses; track address.idAddress) { <div class="data-item"><strong>{{ valueOrDash(address.ville) }}, {{ valueOrDash(address.government) }}</strong><span>{{ valueOrDash(address.country) }} · {{ maskDocument(address.documentLink) }}</span></div> } @empty { <p class="empty">Aucune adresse enregistrée.</p> }</article>
+        <article class="data-card"><h2>Compte bancaire</h2>@if (data.bankAccount; as account) { <div class="data-list"><div><span>Banque</span><strong>{{ valueOrDash(account.bankTitle) }}</strong></div><div><span>Ville</span><strong>{{ valueOrDash(account.ville) }}</strong></div><div><span>Compte</span><strong>•••• {{ account.compte?.slice(-4) ?? '—' }}</strong></div><div><span>Document</span><strong>{{ maskDocument(account.documentLink) }}</strong></div></div> } @else { <p class="empty">Aucun compte bancaire.</p> }</article>
+        <article class="data-card"><h2>Contrat</h2>@if (data.contract; as contract) { <div class="data-list"><div><span>Poste</span><strong>{{ valueOrDash(contract.post) }}</strong></div><div><span>Emploi</span><strong>{{ valueOrDash(contract.emploi) }}</strong></div><div><span>Période</span><strong>{{ valueOrDash(contract.dateStart) }} → {{ valueOrDash(contract.dateEnd) }}</strong></div><div><span>Lieu</span><strong>{{ valueOrDash(contract.lieu) }}</strong></div></div> } @else { <p class="empty">Aucun contrat enregistré.</p> }</article>
+        <article class="data-card"><h2>Données administratives</h2>@for (item of data.administrativeData; track item.idAd) { <div class="data-item"><strong>{{ valueOrDash(item.qualification) }}</strong><span>{{ valueOrDash(item.classification) }} · {{ valueOrDash(item.situationEmploye) }} · {{ maskDocument(item.documentLink) }}</span></div> } @empty { <p class="empty">Aucune donnée administrative.</p> }</article>
+      </section>
+    } @else { <section class="panel"><p class="empty">Chargement des données du profil...</p></section> }
+  }
+</main>

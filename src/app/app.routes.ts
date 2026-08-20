@@ -29,6 +29,10 @@ export const routes: Routes = [
             loadComponent: () => import('./features/competances/competances').then(m => m.CompetancesPage),
           },
           {
+            path: 'users/:id/dossier',
+            loadComponent: () => import('./features/admin/user-dossier/admin-user-dossier').then(m => m.AdminUserDossier),
+          },
+          {
             path: 'users',
             loadComponent: () => import('./features/admin/dashboard/admin-dashboard').then(m => m.AdminDashboard),
           },
@@ -154,7 +158,7 @@ export const routes: Routes = [
       },
       {
         path: 'ai-assistant',
-        canActivate: [roleGuard(Role.SUPERVISEUR, Role.ADMIN)],
+        canActivate: [roleGuard(Role.EMPLOYE, Role.SUPERVISEUR, Role.ADMIN)],
         loadComponent: () => import('./features/ai-assistant/ai-assistant').then(m => m.AiAssistant),
       },
       { path: '', redirectTo: 'employe', pathMatch: 'full' },

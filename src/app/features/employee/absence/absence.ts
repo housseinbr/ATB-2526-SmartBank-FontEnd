@@ -1,4 +1,5 @@
 import { Component, OnInit, computed, signal } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
@@ -95,7 +96,9 @@ export class MesAbsences implements OnInit {
     private fb: FormBuilder,
     private api: AbsenceApiService,
     private authService: AuthService,
-    private userService: UserService
+    private userService: UserService,
+    private route: ActivatedRoute,
+    private router: Router
   ) {
     this.form = this.fb.group({
       type: [null as TypeAbsence | null, Validators.required],
@@ -108,6 +111,19 @@ export class MesAbsences implements OnInit {
 
   ngOnInit(): void {
     this.load();
+    this.route.queryParamMap.subscribe((params) => {
+      if (params.get('ai') !== '1') return;
+      this.editingId.set(null);
+      this.form.reset({
+        type: params.get('type') || null,
+        dateStart: params.get('dateStart') || '',
+        dateEnd: params.get('dateEnd') || '',
+        demiJournee: null,
+        comment: 'Demande préparée depuis l’assistant IA',
+      });
+      this.showForm.set(true);
+      this.router.navigate([], { relativeTo: this.route, queryParams: {}, replaceUrl: true });
+    });
   }
 
   load(): void {

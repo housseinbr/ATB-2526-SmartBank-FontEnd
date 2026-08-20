@@ -9,6 +9,9 @@
         {{ isAdminView() ? 'Vue admin des competences du collaborateur.' : 'Ton profil de competences personnel.' }}
       </p>
     </div>
+    <div class="hero__actions">
+      @if (!isAdminView()) { <button class="primary-btn" type="button" (click)="openAddModal()">Ajouter une compétence</button> }
+    </div>
     <div class="hero__stats">
       <div><strong>{{ summary().total }}</strong><span>competences</span></div>
       <div><strong>{{ summary().domains }}</strong><span>domaines</span></div>
@@ -47,3 +50,27 @@
     </section>
   }
 </div>
+
+@if (showAddModal()) {
+  <div class="competence-modal-backdrop" (click)="closeAddModal()">
+    <form class="competence-modal" (click)="$event.stopPropagation()" (ngSubmit)="addCompetance()">
+      <div class="competence-modal__head">
+        <div><p class="eyebrow">NOUVELLE COMPÉTENCE</p><h2>Ajouter une compétence</h2><p>Choisissez une formation réelle du catalogue.</p></div>
+        <button type="button" class="modal-close" (click)="closeAddModal()">×</button>
+      </div>
+      <label for="formation-select">Formation</label>
+      <select id="formation-select" [value]="selectedFormationId() ?? ''" (change)="selectedFormationId.set(+$any($event.target).value || null)" required>
+        <option value="">Sélectionner une formation</option>
+        @for (formation of formations(); track formation.idFormation) {
+          <option [value]="formation.idFormation">{{ formation.title }} · {{ formation.domain }}</option>
+        }
+      </select>
+      @if (selectedFormationId(); as selectedId) {
+        @for (formation of formations(); track formation.idFormation) {
+          @if (formation.idFormation === selectedId) { <div class="formation-preview"><strong>{{ formation.title }}</strong><span>{{ formation.domain }} · {{ formation.theme }}</span><small>{{ formation.duree }} {{ formation.unite }} · {{ formation.lieu }}</small></div> }
+        }
+      }
+      <footer><button type="button" class="secondary-btn" (click)="closeAddModal()">Annuler</button><button type="submit" class="primary-btn">Envoyer la demande</button></footer>
+    </form>
+  </div>
+}

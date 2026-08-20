@@ -1,8 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { CompetanceService } from '../../core/services/competance.service';
+import { FormationService } from '../../core/services/formation.service';
+import { DemandeFormationService } from '../../core/services/demande-formation.service';
+import { Formation } from '../../core/models/formation';
 import { UserService } from '../../core/services/user.service';
 import { AuthService } from '../../core/services/auth.service';
 import { Competance } from '../../core/models/competance';
@@ -13,7 +16,7 @@ import { Icon } from '../../shared/components/icon/icon';
 @Component({
   selector: 'app-competances-page',
   standalone: true,
-  imports: [CommonModule, Toast, Icon],
+  imports: [CommonModule, Toast, Icon, RouterLink],
   templateUrl: './competances.html',
   styleUrl: './competances.css',
 })
@@ -22,11 +25,16 @@ export class CompetancesPage implements OnInit {
   private readonly userService = inject(UserService);
   private readonly authService = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
+  private readonly formationService = inject(FormationService);
+  private readonly demandeFormationService = inject(DemandeFormationService);
 
   readonly loading = signal(false);
   readonly competances = signal<Competance[]>([]);
   readonly user = signal<UserResponse | null>(null);
   readonly isAdminView = signal(false);
+  readonly showAddModal = signal(false);
+  readonly formations = signal<Formation[]>([]);
+  readonly selectedFormationId = signal<number | null>(null);
 
   readonly toastMessage = signal('');
   readonly toastType = signal<ToastType>('success');
@@ -82,6 +90,34 @@ export class CompetancesPage implements OnInit {
     this.competanceService.getMine().pipe(finalize(() => this.loading.set(false))).subscribe({
       next: (items) => this.competances.set(items),
       error: () => this.showToast('Impossible de charger vos competences', 'error'),
+    });
+  }
+
+  openAddModal(): void {
+    this.showAddModal.set(true);
+    this.formationService.getAll().subscribe({
+      next: (items) => this.formations.set(items),
+      error: () => this.showToast('Impossible de charger le catalogue des formations', 'error'),
+    });
+  }
+
+  closeAddModal(): void {
+    this.showAddModal.set(false);
+    this.selectedFormationId.set(null);
+  }
+
+  addCompetance(): void {
+    const formationId = this.selectedFormationId();
+    if (!formationId) {
+      this.showToast('Sélectionnez une formation', 'error');
+      return;
+    }
+    this.demandeFormationService.requestFormation(formationId).subscribe({
+      next: () => {
+        this.closeAddModal();
+        this.showToast('Demande de formation envoyée. La compétence sera ajoutée après validation.', 'success');
+      },
+      error: (error) => this.showToast(error?.error?.message ?? 'Impossible d’envoyer la demande', 'error'),
     });
   }
 

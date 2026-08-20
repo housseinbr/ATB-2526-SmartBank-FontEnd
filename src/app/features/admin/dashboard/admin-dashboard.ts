@@ -428,6 +428,10 @@ private doAssignSupervisor(user: UserResponse, sup: UserResponse | null) {
     this.router.navigate(['/dashboard/admin/users', user.id, 'donnees']);
   }
 
+  openUserDossier(user: UserResponse) {
+    this.router.navigate(['/dashboard/admin/users', user.id, 'dossier']);
+  }
+
   openHistoryModal(user: UserResponse) {
     this.selectedHistoryUser.set(user);
     this.showHistoryModal.set(true);
